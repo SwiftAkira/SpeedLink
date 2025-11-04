@@ -21,12 +21,12 @@ Build party creation, joining, and member management.
 ### Story 3.3: Party Member List Display ✅
 ### Story 3.4: Leave Party Functionality ✅
 
-## Epic 4: Real-Time Map & Location
+## Epic 4: Real-Time Map & Location ✅
 Integrate Mapbox and implement real-time location sharing.
-### Story 4.1: Mapbox Integration
-### Story 4.2: Real-Time Location Updates via Supabase
-### Story 4.3: Party Member Markers on Map
-### Story 4.4: Speed & Direction Indicators
+### Story 4.1: Mapbox Integration ✅
+### Story 4.2: Real-Time Location Updates via Supabase ✅
+### Story 4.3: Party Member Markers on Map ✅
+### Story 4.4: Speed & Direction Indicators ✅
 
 ## Epic 5: Speed Camera Alerts
 Add basic speed camera alert system.
