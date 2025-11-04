@@ -8,15 +8,16 @@ story_location: "c:/Users/Orion/Documents/x01/docs/stories"
 development_status:
   epic-1: done
   1-1-finalize-mvp-feature-list: done
-  1-2-define-technology-stack: done
-  1-3-design-system-architecture: done
-  epic-1-retrospective: done
+  1-2-create-supabase-project: done
+  1-3-scaffold-nextjs-app-pwa: done
+  1-4-configure-environment-deploy: done
+  epic-1-retrospective: pending
 
-  epic-2: backlog
-  2-1-create-wireframes: drafted
-  2-2-set-up-repositories: drafted
-  2-3-scaffold-pwa-frontend: drafted
-  2-4-scaffold-backend-environment: backlog
+  epic-2: in-progress
+  2-1-email-password-authentication: backlog
+  2-2-social-login-google: backlog
+  2-3-user-profile-creation: backlog
+  2-4-privacy-toggle-settings: backlog
   epic-2-retrospective: optional
 
   epic-3: backlog

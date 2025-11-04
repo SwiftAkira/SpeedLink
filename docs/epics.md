@@ -3,9 +3,9 @@
 ## Epic 1: Planning & Setup ✅
 Define MVP features and set up Next.js + Supabase.
 ### Story 1.1: Finalize MVP Feature List ✅
-### Story 1.2: Create Supabase Project
-### Story 1.3: Scaffold Next.js App with PWA
-### Story 1.4: Configure Environment & Deploy to Vercel
+### Story 1.2: Create Supabase Project ✅
+### Story 1.3: Scaffold Next.js App with PWA ✅
+### Story 1.4: Configure Environment & Deploy to Vercel ✅
 
 ## Epic 2: Authentication & User Profiles
 Implement Supabase authentication and basic user management.
