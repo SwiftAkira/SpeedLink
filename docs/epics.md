@@ -7,12 +7,12 @@ Define MVP features and set up Next.js + Supabase.
 ### Story 1.3: Scaffold Next.js App with PWA ✅
 ### Story 1.4: Configure Environment & Deploy to Vercel ✅
 
-## Epic 2: Authentication & User Profiles
+## Epic 2: Authentication & User Profiles ✅
 Implement Supabase authentication and basic user management.
-### Story 2.1: Email/Password Authentication
-### Story 2.2: Social Login (Google)
-### Story 2.3: User Profile Creation
-### Story 2.4: Privacy Toggle Settings
+### Story 2.1: Email/Password Authentication ✅
+### Story 2.2: Social Login (GitHub) ✅
+### Story 2.3: User Profile Creation ✅
+### Story 2.4: Privacy Toggle Settings ✅
 
 ## Epic 3: Party/Group Features
 Build party creation, joining, and member management.
