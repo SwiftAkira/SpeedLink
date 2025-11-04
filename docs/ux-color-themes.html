@@ -1,0 +1,554 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeedLink Color Themes</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            padding: 40px 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        .header h1 {
+            font-size: 3em;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header p {
+            font-size: 1.2em;
+            color: #888;
+        }
+        .themes-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 40px;
+        }
+        .theme-card {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 40px;
+            border: 2px solid #2a2a2a;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .theme-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+        .theme-header {
+            margin-bottom: 30px;
+        }
+        .theme-name {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .theme-description {
+            color: #999;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .theme-personality {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .personality-tag {
+            padding: 6px 16px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .color-swatch {
+            aspect-ratio: 3/2;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .color-label {
+            opacity: 0.9;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .color-hex {
+            font-size: 0.75em;
+            opacity: 0.7;
+            font-family: 'Courier New', monospace;
+        }
+        .components-demo h4 {
+            margin: 30px 0 20px 0;
+            font-size: 1.2em;
+            opacity: 0.8;
+        }
+        .buttons-demo {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: var(--primary-text);
+        }
+        .btn-secondary {
+            background: var(--secondary);
+            color: var(--secondary-text);
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        .alert-demo {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .alert {
+            padding: 16px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .alert-success { background: var(--success); color: #fff; }
+        .alert-warning { background: var(--warning); color: #000; }
+        .alert-danger { background: var(--danger); color: #fff; }
+        .alert-icon {
+            font-size: 1.5em;
+        }
+        .card-demo {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .card-demo h5 {
+            font-size: 1.3em;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+        .card-demo p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        /* Theme 1: Speed Demon (Electric Orange & Deep Purple) */
+        .theme-1 {
+            --primary: #FF6B35;
+            --primary-text: #fff;
+            --secondary: #5B2C6F;
+            --secondary-text: #fff;
+            --accent: #FFD23F;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --bg: #0F0F0F;
+            --card-bg: #1A1A1A;
+            --text: #FFFFFF;
+            --text-secondary: #A0A0A0;
+            --border: #2A2A2A;
+        }
+        
+        /* Theme 2: Night Rider (Electric Blue & Neon Cyan) */
+        .theme-2 {
+            --primary: #3B82F6;
+            --primary-text: #fff;
+            --secondary: #06B6D4;
+            --secondary-text: #000;
+            --accent: #8B5CF6;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --bg: #0A0F1E;
+            --card-bg: #151B2E;
+            --text: #FFFFFF;
+            --text-secondary: #94A3B8;
+            --border: #1E293B;
+        }
+        
+        /* Theme 3: Stealth Mode (Lime Green & Dark) */
+        .theme-3 {
+            --primary: #84CC16;
+            --primary-text: #000;
+            --secondary: #FBBF24;
+            --secondary-text: #000;
+            --accent: #F97316;
+            --success: #22C55E;
+            --warning: #EAB308;
+            --danger: #DC2626;
+            --bg: #0C0C0C;
+            --card-bg: #171717;
+            --text: #FAFAFA;
+            --text-secondary: #A3A3A3;
+            --border: #262626;
+        }
+        
+        /* Theme 4: Rebel Red (Crimson & Black with Gold) */
+        .theme-4 {
+            --primary: #DC2626;
+            --primary-text: #fff;
+            --secondary: #F59E0B;
+            --secondary-text: #000;
+            --accent: #7C3AED;
+            --success: #059669;
+            --warning: #D97706;
+            --danger: #B91C1C;
+            --bg: #0D0D0D;
+            --card-bg: #1C1C1C;
+            --text: #FFFFFF;
+            --text-secondary: #9CA3AF;
+            --border: #2D2D2D;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏍️ SpeedLink Color Themes</h1>
+        <p>Explore 4 bold theme directions - Choose the vibe that feels right</p>
+    </div>
+    
+    <div class="themes-container">
+        
+        <!-- THEME 1: Speed Demon -->
+        <div class="theme-card theme-1">
+            <div class="theme-header">
+                <div class="theme-name" style="color: var(--primary)">1. Speed Demon</div>
+                <div class="theme-description">
+                    Electric orange meets deep purple - high energy, rebellious, impossible to ignore. 
+                    Like a sportbike at night with LED strips. Bold warnings that demand attention.
+                </div>
+                <div class="theme-personality">
+                    <span class="personality-tag" style="background: var(--primary); color: var(--primary-text)">⚡ High Energy</span>
+                    <span class="personality-tag" style="background: var(--secondary); color: var(--secondary-text)">🎯 Rebellious</span>
+                    <span class="personality-tag" style="background: var(--accent); color: #000">🔥 Aggressive</span>
+                </div>
+            </div>
+            
+            <div class="color-palette">
+                <div class="color-swatch" style="background: var(--primary)">
+                    <div class="color-label">Primary</div>
+                    <div class="color-hex">#FF6B35</div>
+                </div>
+                <div class="color-swatch" style="background: var(--secondary)">
+                    <div class="color-label">Secondary</div>
+                    <div class="color-hex">#5B2C6F</div>
+                </div>
+                <div class="color-swatch" style="background: var(--accent)">
+                    <div class="color-label">Accent</div>
+                    <div class="color-hex">#FFD23F</div>
+                </div>
+                <div class="color-swatch" style="background: var(--success)">
+                    <div class="color-label">Success</div>
+                    <div class="color-hex">#10B981</div>
+                </div>
+                <div class="color-swatch" style="background: var(--warning)">
+                    <div class="color-label">Warning</div>
+                    <div class="color-hex">#F59E0B</div>
+                </div>
+                <div class="color-swatch" style="background: var(--danger)">
+                    <div class="color-label">Danger/Alert</div>
+                    <div class="color-hex">#EF4444</div>
+                </div>
+            </div>
+            
+            <div class="components-demo">
+                <h4>Buttons</h4>
+                <div class="buttons-demo">
+                    <button class="btn btn-primary">Join Party</button>
+                    <button class="btn btn-secondary">Create Party</button>
+                    <button class="btn btn-danger">Leave Party</button>
+                </div>
+                
+                <h4>Alerts (LOUD warnings)</h4>
+                <div class="alert-demo">
+                    <div class="alert alert-danger">
+                        <span class="alert-icon">📷</span>
+                        <div><strong>SPEED CAMERA</strong> - 500m ahead!</div>
+                    </div>
+                    <div class="alert alert-warning">
+                        <span class="alert-icon">👮</span>
+                        <div><strong>Police reported</strong> - 2km ahead</div>
+                    </div>
+                    <div class="alert alert-success">
+                        <span class="alert-icon">✅</span>
+                        <div>Connected to party - 5 members online</div>
+                    </div>
+                </div>
+                
+                <h4>Party Card</h4>
+                <div class="card-demo">
+                    <h5>Party #847362</h5>
+                    <p>5 members riding • Real-time tracking active • 23km together</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- THEME 2: Night Rider -->
+        <div class="theme-card theme-2">
+            <div class="theme-header">
+                <div class="theme-name" style="color: var(--primary)">2. Night Rider</div>
+                <div class="theme-description">
+                    Electric blue with neon cyan accents - tech-forward, sleek, professional speed. 
+                    Like a dashboard glowing in the dark. Modern and trustworthy but still exciting.
+                </div>
+                <div class="theme-personality">
+                    <span class="personality-tag" style="background: var(--primary); color: var(--primary-text)">💎 Tech-Forward</span>
+                    <span class="personality-tag" style="background: var(--secondary); color: var(--secondary-text)">🌊 Sleek</span>
+                    <span class="personality-tag" style="background: var(--accent); color: #fff">⚡ Dynamic</span>
+                </div>
+            </div>
+            
+            <div class="color-palette">
+                <div class="color-swatch" style="background: var(--primary)">
+                    <div class="color-label">Primary</div>
+                    <div class="color-hex">#3B82F6</div>
+                </div>
+                <div class="color-swatch" style="background: var(--secondary)">
+                    <div class="color-label">Secondary</div>
+                    <div class="color-hex">#06B6D4</div>
+                </div>
+                <div class="color-swatch" style="background: var(--accent)">
+                    <div class="color-label">Accent</div>
+                    <div class="color-hex">#8B5CF6</div>
+                </div>
+                <div class="color-swatch" style="background: var(--success)">
+                    <div class="color-label">Success</div>
+                    <div class="color-hex">#10B981</div>
+                </div>
+                <div class="color-swatch" style="background: var(--warning)">
+                    <div class="color-label">Warning</div>
+                    <div class="color-hex">#F59E0B</div>
+                </div>
+                <div class="color-swatch" style="background: var(--danger)">
+                    <div class="color-label">Danger/Alert</div>
+                    <div class="color-hex">#EF4444</div>
+                </div>
+            </div>
+            
+            <div class="components-demo">
+                <h4>Buttons</h4>
+                <div class="buttons-demo">
+                    <button class="btn btn-primary">Join Party</button>
+                    <button class="btn btn-secondary">Create Party</button>
+                    <button class="btn btn-danger">Leave Party</button>
+                </div>
+                
+                <h4>Alerts (LOUD warnings)</h4>
+                <div class="alert-demo">
+                    <div class="alert alert-danger">
+                        <span class="alert-icon">📷</span>
+                        <div><strong>SPEED CAMERA</strong> - 500m ahead!</div>
+                    </div>
+                    <div class="alert alert-warning">
+                        <span class="alert-icon">👮</span>
+                        <div><strong>Police reported</strong> - 2km ahead</div>
+                    </div>
+                    <div class="alert alert-success">
+                        <span class="alert-icon">✅</span>
+                        <div>Connected to party - 5 members online</div>
+                    </div>
+                </div>
+                
+                <h4>Party Card</h4>
+                <div class="card-demo">
+                    <h5>Party #847362</h5>
+                    <p>5 members riding • Real-time tracking active • 23km together</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- THEME 3: Stealth Mode -->
+        <div class="theme-card theme-3">
+            <div class="theme-header">
+                <div class="theme-name" style="color: var(--primary)">3. Stealth Mode</div>
+                <div class="theme-description">
+                    Lime green on pure black - tactical, sharp, under-the-radar vibes. 
+                    Like night vision goggles or military HUD. Serious about avoiding detection.
+                </div>
+                <div class="theme-personality">
+                    <span class="personality-tag" style="background: var(--primary); color: var(--primary-text)">🎯 Tactical</span>
+                    <span class="personality-tag" style="background: var(--secondary); color: var(--secondary-text)">⚠️ Alert</span>
+                    <span class="personality-tag" style="background: var(--accent); color: #fff">🔒 Stealth</span>
+                </div>
+            </div>
+            
+            <div class="color-palette">
+                <div class="color-swatch" style="background: var(--primary)">
+                    <div class="color-label">Primary</div>
+                    <div class="color-hex">#84CC16</div>
+                </div>
+                <div class="color-swatch" style="background: var(--secondary)">
+                    <div class="color-label">Secondary</div>
+                    <div class="color-hex">#FBBF24</div>
+                </div>
+                <div class="color-swatch" style="background: var(--accent)">
+                    <div class="color-label">Accent</div>
+                    <div class="color-hex">#F97316</div>
+                </div>
+                <div class="color-swatch" style="background: var(--success)">
+                    <div class="color-label">Success</div>
+                    <div class="color-hex">#22C55E</div>
+                </div>
+                <div class="color-swatch" style="background: var(--warning)">
+                    <div class="color-label">Warning</div>
+                    <div class="color-hex">#EAB308</div>
+                </div>
+                <div class="color-swatch" style="background: var(--danger)">
+                    <div class="color-label">Danger/Alert</div>
+                    <div class="color-hex">#DC2626</div>
+                </div>
+            </div>
+            
+            <div class="components-demo">
+                <h4>Buttons</h4>
+                <div class="buttons-demo">
+                    <button class="btn btn-primary">Join Party</button>
+                    <button class="btn btn-secondary">Create Party</button>
+                    <button class="btn btn-danger">Leave Party</button>
+                </div>
+                
+                <h4>Alerts (LOUD warnings)</h4>
+                <div class="alert-demo">
+                    <div class="alert alert-danger">
+                        <span class="alert-icon">📷</span>
+                        <div><strong>SPEED CAMERA</strong> - 500m ahead!</div>
+                    </div>
+                    <div class="alert alert-warning">
+                        <span class="alert-icon">👮</span>
+                        <div><strong>Police reported</strong> - 2km ahead</div>
+                    </div>
+                    <div class="alert alert-success">
+                        <span class="alert-icon">✅</span>
+                        <div>Connected to party - 5 members online</div>
+                    </div>
+                </div>
+                
+                <h4>Party Card</h4>
+                <div class="card-demo">
+                    <h5>Party #847362</h5>
+                    <p>5 members riding • Real-time tracking active • 23km together</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- THEME 4: Rebel Red -->
+        <div class="theme-card theme-4">
+            <div class="theme-header">
+                <div class="theme-name" style="color: var(--primary)">4. Rebel Red</div>
+                <div class="theme-description">
+                    Crimson red with gold accents on black - dangerous, bold, unapologetic. 
+                    Like a warning sign you choose to embrace. Pure rebel energy.
+                </div>
+                <div class="theme-personality">
+                    <span class="personality-tag" style="background: var(--primary); color: var(--primary-text)">🔥 Dangerous</span>
+                    <span class="personality-tag" style="background: var(--secondary); color: var(--secondary-text)">👑 Premium</span>
+                    <span class="personality-tag" style="background: var(--accent); color: #fff">⚡ Unapologetic</span>
+                </div>
+            </div>
+            
+            <div class="color-palette">
+                <div class="color-swatch" style="background: var(--primary)">
+                    <div class="color-label">Primary</div>
+                    <div class="color-hex">#DC2626</div>
+                </div>
+                <div class="color-swatch" style="background: var(--secondary)">
+                    <div class="color-label">Secondary</div>
+                    <div class="color-hex">#F59E0B</div>
+                </div>
+                <div class="color-swatch" style="background: var(--accent)">
+                    <div class="color-label">Accent</div>
+                    <div class="color-hex">#7C3AED</div>
+                </div>
+                <div class="color-swatch" style="background: var(--success)">
+                    <div class="color-label">Success</div>
+                    <div class="color-hex">#059669</div>
+                </div>
+                <div class="color-swatch" style="background: var(--warning)">
+                    <div class="color-label">Warning</div>
+                    <div class="color-hex">#D97706</div>
+                </div>
+                <div class="color-swatch" style="background: var(--danger)">
+                    <div class="color-label">Danger/Alert</div>
+                    <div class="color-hex">#B91C1C</div>
+                </div>
+            </div>
+            
+            <div class="components-demo">
+                <h4>Buttons</h4>
+                <div class="buttons-demo">
+                    <button class="btn btn-primary">Join Party</button>
+                    <button class="btn btn-secondary">Create Party</button>
+                    <button class="btn btn-danger">Leave Party</button>
+                </div>
+                
+                <h4>Alerts (LOUD warnings)</h4>
+                <div class="alert-demo">
+                    <div class="alert alert-danger">
+                        <span class="alert-icon">��</span>
+                        <div><strong>SPEED CAMERA</strong> - 500m ahead!</div>
+                    </div>
+                    <div class="alert alert-warning">
+                        <span class="alert-icon">👮</span>
+                        <div><strong>Police reported</strong> - 2km ahead</div>
+                    </div>
+                    <div class="alert alert-success">
+                        <span class="alert-icon">✅</span>
+                        <div>Connected to party - 5 members online</div>
+                    </div>
+                </div>
+                
+                <h4>Party Card</h4>
+                <div class="card-demo">
+                    <h5>Party #847362</h5>
+                    <p>5 members riding • Real-time tracking active • 23km together</p>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <div style="text-align: center; margin-top: 60px; padding: 40px; color: #666;">
+        <p>🎨 Take your time exploring each theme. Try clicking buttons and imagine using these colors at 80mph.</p>
+        <p style="margin-top: 10px;">Which vibe captures the SpeedLink attitude?</p>
+    </div>
+</body>
+</html>
