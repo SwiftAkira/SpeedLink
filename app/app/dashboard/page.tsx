@@ -61,17 +61,20 @@ export default async function DashboardPage() {
             </Link>
           </div>
 
-          <div className="bg-[#171717] border border-[#262626] rounded-xl p-6 opacity-50">
-            <h3 className="font-bold text-[#FAFAFA] mb-2">Create Party</h3>
-            <p className="text-sm text-[#A3A3A3] mb-6">Start a new riding group with a 6-digit code</p>
-            <button className="inline-block bg-[#262626] text-[#A3A3A3] px-4 py-3 rounded-lg cursor-not-allowed text-sm font-bold min-h-11" disabled>
-              Coming Soon
-            </button>
+          <div className="bg-[#171717] border border-[#262626] rounded-xl p-6 hover:border-[#84CC16] transition-colors">
+            <h3 className="font-bold text-[#FAFAFA] mb-2">Party Management</h3>
+            <p className="text-sm text-[#A3A3A3] mb-6">Create or join a riding group with 6-digit codes</p>
+            <Link
+              href="/party"
+              className="bg-[#84CC16] text-black px-4 py-3 rounded-lg hover:bg-[#73B812] transition-colors text-sm font-bold min-h-11 flex items-center justify-center"
+            >
+              Manage Party
+            </Link>
           </div>
 
           <div className="bg-[#171717] border border-[#262626] rounded-xl p-6 opacity-50">
-            <h3 className="font-bold text-[#FAFAFA] mb-2">Join Party</h3>
-            <p className="text-sm text-[#A3A3A3] mb-6">Enter a party code to join your friends</p>
+            <h3 className="font-bold text-[#FAFAFA] mb-2">Live Map</h3>
+            <p className="text-sm text-[#A3A3A3] mb-6">View real-time locations of party members</p>
             <button className="inline-block bg-[#262626] text-[#A3A3A3] px-4 py-3 rounded-lg cursor-not-allowed text-sm font-bold min-h-11" disabled>
               Coming Soon
             </button>

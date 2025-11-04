@@ -1,0 +1,260 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { getCurrentParty, leaveParty } from '@/lib/services/partyService';
+import type { PartyWithMembers } from '@/lib/types';
+import CreatePartyModal from './CreatePartyModal';
+import JoinPartyModal from './JoinPartyModal';
+import PartyMemberList from './PartyMemberList';
+
+export default function PartyPage() {
+  const router = useRouter();
+  const [currentParty, setCurrentParty] = useState<PartyWithMembers | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  const checkAuth = async () => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+  };
+
+  const loadCurrentParty = async () => {
+    const result = await getCurrentParty();
+    if (result.data) {
+      setCurrentParty(result.data);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    checkAuth();
+    loadCurrentParty();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleCreateSuccess = () => {
+    setShowCreateModal(false);
+    loadCurrentParty();
+  };
+
+  const handleJoinSuccess = () => {
+    setShowJoinModal(false);
+    loadCurrentParty();
+  };
+
+  const handleLeaveParty = async () => {
+    if (!currentParty) return;
+
+    const result = await leaveParty(currentParty.id);
+    if (!result.error) {
+      setCurrentParty(null);
+      setShowLeaveConfirm(false);
+    }
+  };
+
+  const copyPartyCode = () => {
+    if (currentParty?.party_code) {
+      navigator.clipboard.writeText(currentParty.party_code);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-12 w-12 border-4 border-[var(--primary)] border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen p-4 pb-20">
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">Party</h1>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="px-4 py-2 rounded-lg font-semibold transition-all bg-[var(--card-bg)] border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--foreground-secondary)]"
+          >
+            Dashboard
+          </button>
+        </div>
+
+        {/* Current Party or Join/Create Options */}
+        {currentParty ? (
+          <>
+            {/* Party Info Card */}
+            <div className="card">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-[var(--foreground)] mb-1">
+                    {currentParty.name || 'Unnamed Party'}
+                  </h2>
+                  <p className="text-sm text-[var(--foreground-secondary)]">
+                    {currentParty.member_count} members active
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowLeaveConfirm(true)}
+                  className="px-4 py-2 rounded-lg font-semibold transition-all bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-[var(--danger)] hover:bg-[var(--danger)]/20"
+                >
+                  Leave
+                </button>
+              </div>
+
+              {/* Party Code */}
+              <div className="bg-[var(--background)] rounded-lg p-4 border border-[var(--border)]">
+                <p className="text-xs text-[var(--foreground-secondary)] mb-2">
+                  Party Code
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-3xl font-bold text-[var(--primary)] tracking-widest">
+                    {currentParty.party_code}
+                  </span>
+                  <button
+                    onClick={copyPartyCode}
+                    className="px-4 py-2 rounded-lg font-semibold transition-all bg-[var(--primary)] text-black hover:bg-[var(--primary-hover)]"
+                  >
+                    {copySuccess ? '✓ Copied' : 'Copy'}
+                  </button>
+                </div>
+                <p className="text-xs text-[var(--foreground-secondary)] mt-2">
+                  Share this code with friends to join your party
+                </p>
+              </div>
+            </div>
+
+            {/* Party Members */}
+            <PartyMemberList partyId={currentParty.id} />
+          </>
+        ) : (
+          /* No Party - Show Join/Create Options */
+          <div className="space-y-4">
+            <div className="card text-center py-8">
+              <h2 className="text-xl font-bold text-[var(--foreground)] mb-2">
+                Not in a party
+              </h2>
+              <p className="text-sm text-[var(--foreground-secondary)] mb-6">
+                Create a new party or join an existing one
+              </p>
+
+              <div className="flex gap-4 max-w-md mx-auto">
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="flex-1 btn-primary"
+                >
+                  Create Party
+                </button>
+                <button
+                  onClick={() => setShowJoinModal(true)}
+                  className="flex-1 px-4 py-3 rounded-lg font-semibold transition-all bg-[var(--card-bg)] border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)]"
+                >
+                  Join Party
+                </button>
+              </div>
+            </div>
+
+            {/* Info Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="card">
+                <div className="text-4xl mb-3">🚀</div>
+                <h3 className="text-lg font-bold text-[var(--foreground)] mb-2">
+                  Real-Time Tracking
+                </h3>
+                <p className="text-sm text-[var(--foreground-secondary)]">
+                  See your crew&apos;s live location with ultra-low latency updates
+                </p>
+              </div>
+              <div className="card">
+                <div className="text-4xl mb-3">⚡</div>
+                <h3 className="text-lg font-bold text-[var(--foreground)] mb-2">
+                  6-Digit Codes
+                </h3>
+                <p className="text-sm text-[var(--foreground-secondary)]">
+                  Simple codes make joining parties quick and easy
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Leave Confirmation Modal */}
+        {showLeaveConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              onClick={() => setShowLeaveConfirm(false)}
+            />
+            <div className="relative w-full max-w-md">
+              <div className="card animate-scale-in">
+                <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">
+                  Leave Party?
+                </h3>
+                <p className="text-sm text-[var(--foreground-secondary)] mb-6">
+                  Are you sure you want to leave this party? You&apos;ll need the code
+                  to rejoin.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowLeaveConfirm(false)}
+                    className="flex-1 px-4 py-3 rounded-lg font-semibold transition-all bg-[var(--card-bg)] border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--foreground-secondary)]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleLeaveParty}
+                    className="flex-1 btn-danger"
+                  >
+                    Leave Party
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Modals */}
+      <CreatePartyModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={handleCreateSuccess}
+      />
+      <JoinPartyModal
+        isOpen={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        onSuccess={handleJoinSuccess}
+      />
+
+      <style jsx>{`
+        @keyframes scale-in {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        .animate-scale-in {
+          animation: scale-in 0.2s ease-out;
+        }
+      `}</style>
+    </div>
+  );
+}

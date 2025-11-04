@@ -14,12 +14,12 @@ Implement Supabase authentication and basic user management.
 ### Story 2.3: User Profile Creation ✅
 ### Story 2.4: Privacy Toggle Settings ✅
 
-## Epic 3: Party/Group Features
+## Epic 3: Party/Group Features ✅
 Build party creation, joining, and member management.
-### Story 3.1: Party Creation with 6-Digit Codes
-### Story 3.2: Join Party Flow
-### Story 3.3: Party Member List Display
-### Story 3.4: Leave Party Functionality
+### Story 3.1: Party Creation with 6-Digit Codes ✅
+### Story 3.2: Join Party Flow ✅
+### Story 3.3: Party Member List Display ✅
+### Story 3.4: Leave Party Functionality ✅
 
 ## Epic 4: Real-Time Map & Location
 Integrate Mapbox and implement real-time location sharing.
