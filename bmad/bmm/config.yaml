@@ -3,7 +3,7 @@
 # Version: 6.0.0-alpha.5
 # Date: 2025-11-04T14:58:22.908Z
 
-project_name: x01
+project_name: SpeedLink
 include_game_planning: false
 user_skill_level: expert
 tech_docs: '{project-root}/docs'
