@@ -1,0 +1,27 @@
+{
+  "name": "SpeedLink - Group Ride Tracker",
+  "short_name": "SpeedLink",
+  "description": "Real-time location sharing and speed camera alerts for riders",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["navigation", "social", "utilities"],
+  "screenshots": [],
+  "shortcuts": []
+}

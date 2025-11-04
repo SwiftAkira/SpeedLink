@@ -1,131 +1,279 @@
-﻿# SpeedLink Technology Stack Evaluation & Selection
+﻿# SpeedLink Technology Stack# SpeedLink Technology Stack
 
-**Document Version:** 1.0  
-**Date:** November 4, 2025  
-**Author:** Development Team  
-**Status:** Approved
 
----
 
-## Executive Summary
+**Date:** November 4, 2025  **Date:** November 4, 2025  
 
-This document presents the formal evaluation and selection of the technology stack for the SpeedLink MVP. All selections have been validated against the 29-hour development timeline, ≤800ms latency requirement, PWA capabilities, and scalability for 1000+ concurrent parties.
+**Status:** Final**Status:** Final
 
-**Selected Stack:**
-- **Frontend:** React + Vite
-- **Backend REST API:** Node.js + Fastify
-- **Backend Real-Time:** Node.js + Socket.IO
-- **Database:** PostgreSQL + Redis
-- **Build Tools:** Vite
-- **Hosting:** Vercel (frontend), AWS/GCP (backend)
-- **Mapping:** Mapbox GL JS
 
----
 
-## 1. Evaluation Methodology
+------
 
-### Scoring Criteria
 
-Each technology is scored 1-5 (5 = best) across four dimensions:
 
-| Criterion | Weight | Description |
-|-----------|--------|-------------|
-| **Performance** | 30% | Speed, latency, bundle size, runtime efficiency |
+## Stack Overview## Selected Stack
+
+
+
+### Frontend### Frontend
+
+- **Next.js latest** - React framework with App Router, built-in PWA support- **Next.js latest** - React framework with App Router, built-in PWA support
+
+- **TypeScript** - Type safety and better developer experience- **TypeScript** - Type safety and better DX
+
+- **Tailwind CSS** - Utility-first styling- **Tailwind CSS** - Utility-first styling
+
+- **Mapbox GL JS** - Interactive real-time mapping- **Mapbox GL JS** - Interactive real-time mapping
+
+- **next-pwa** - PWA functionality (offline, installable, push notifications)- **next-pwa** - PWA functionality (offline, installable, push notifications)
+
+
+
+### Backend### Backend
+
+- **Supabase** (Free Tier) - All-in-one backend solution- **Supabase** (Free Tier) - All-in-one backend
+
+  - **PostgreSQL Database** - User profiles, parties, reports, alerts  - PostgreSQL database
+
+  - **Real-time Subscriptions** - WebSocket-based live updates (≤800ms latency)  - Real-time subscriptions (WebSockets)
+
+  - **Authentication** - Email/password, social logins (Google, GitHub)  - Authentication (email, social logins)
+
+  - **Storage** - User avatars and media files  - Storage for user media
+
+  - **Edge Functions** - Custom serverless functions when needed  - Edge Functions for custom logic
+
+  - **Row Level Security (RLS)** - Fine-grained privacy controls  - Row Level Security for privacy
+
+
+
+### Hosting & Deployment### Hosting
+
+- **Vercel** - Free tier for Next.js deployment- **Vercel** - Free tier for Next.js apps (frontend)
+
+- **Supabase** - Free tier (500MB database, 2GB bandwidth, 1GB file storage)- **Supabase** - Free tier for backend (500MB DB, 2GB bandwidth)
+
+
+
+### Third-Party APIs### APIs
+
+- **Mapbox GL JS** - Interactive mapping (free tier: 50k loads/month)- **Mapbox** - Mapping and geocoding (free tier: 50k loads/month)
+
+
+
+------
+
+
+
+## Why This Stack?## 1. Evaluation Methodology
+
+
+
+### Next.js Benefits### Scoring Criteria
+
+- ✅ Built-in PWA support with `next-pwa`
+
+- ✅ Server-side rendering for better SEO and performanceEach technology is scored 1-5 (5 = best) across four dimensions:
+
+- ✅ API routes for custom backend logic
+
+- ✅ Automatic code splitting and optimization| Criterion | Weight | Description |
+
+- ✅ Hot reloading for fast development|-----------|--------|-------------|
+
+- ✅ Free deployment on Vercel| **Performance** | 30% | Speed, latency, bundle size, runtime efficiency |
+
 | **Development Speed** | 25% | Learning curve, tooling, boilerplate, productivity |
-| **Team Expertise** | 20% | Familiarity, previous experience, ramp-up time |
-| **Community Support** | 25% | Documentation, ecosystem, active maintenance, plugins |
 
-**Total Score Calculation:**  
-(Performance × 0.30) + (Dev Speed × 0.25) + (Team Expertise × 0.20) + (Community × 0.25)
+### Supabase Benefits| **Team Expertise** | 20% | Familiarity, previous experience, ramp-up time |
 
----
+- ✅ **100% free for MVP** - No credit card required| **Community Support** | 25% | Documentation, ecosystem, active maintenance, plugins |
+
+- ✅ **Instant setup** - No infrastructure management
+
+- ✅ **Real-time built-in** - Achieves ≤800ms update requirement**Total Score Calculation:**  
+
+- ✅ **Authentication included** - Multiple providers supported(Performance × 0.30) + (Dev Speed × 0.25) + (Team Expertise × 0.20) + (Community × 0.25)
+
+- ✅ **Automatic REST API** - Generated from database schema
+
+- ✅ **Row Level Security** - Database-level privacy controls---
+
+- ✅ **Easy scaling** - Upgrade to paid tier when needed
 
 ## 2. Frontend Framework Evaluation
 
-### Candidates: React, Vue, Angular, Svelte
+### Cost Breakdown (MVP)
 
-#### React + Vite
+- Next.js on Vercel: **$0/month** (free hobby tier)### Candidates: React, Vue, Angular, Svelte
+
+- Supabase: **$0/month** (free tier - sufficient for MVP)
+
+- Mapbox: **$0/month** (free tier - 50k loads/month)#### React + Vite
+
+- **Total: $0/month** 🎉
 
 | Criterion | Score | Justification |
-|-----------|-------|---------------|
+
+---|-----------|-------|---------------|
+
 | Performance | 5/5 | Virtual DOM optimized, excellent for real-time updates, tree-shaking with Vite |
-| Dev Speed | 5/5 | Rich ecosystem, hot reload, extensive tooling, fast iteration |
+
+## Real-Time Performance| Dev Speed | 5/5 | Rich ecosystem, hot reload, extensive tooling, fast iteration |
+
 | Team Expertise | 5/5 | Industry standard, extensive experience available |
-| Community | 5/5 | Largest ecosystem, comprehensive documentation, active maintenance |
+
+Supabase uses PostgreSQL's built-in replication features to achieve real-time updates:| Community | 5/5 | Largest ecosystem, comprehensive documentation, active maintenance |
+
 | **Weighted Total** | **5.0** | |
 
-**PWA Capabilities:**
-- ✅ Excellent service worker support via ite-plugin-pwa
-- ✅ Offline functionality with workbox integration
-- ✅ Installability through manifest generation
-- ✅ Background sync and push notification support
+```
 
-**Real-Time Performance:**
+Client → Supabase Realtime → PostgreSQL Change Data Capture → All Subscribed Clients**PWA Capabilities:**
+
+```- ✅ Excellent service worker support via ite-plugin-pwa
+
+- ✅ Offline functionality with workbox integration
+
+**Latency:** 200-500ms average (well within ≤800ms requirement)- ✅ Installability through manifest generation
+
+**Scalability:** Handles 1000+ concurrent connections per project- ✅ Background sync and push notification support
+
+
+
+---**Real-Time Performance:**
+
 - ✅ Efficient re-rendering with React 18 concurrent features
-- ✅ Optimized for WebSocket integration
+
+## Development Timeline Estimate- ✅ Optimized for WebSocket integration
+
 - ✅ Excellent performance for map marker updates (<50ms render)
 
-**Timeline Validation:** React + Vite development time: **8 hours** (within 29-hour estimate)
+| Component | Time Estimate |
 
----
+|-----------|--------------|**Timeline Validation:** React + Vite development time: **8 hours** (within 29-hour estimate)
 
-#### Vue 3 + Vite
+| Next.js setup + PWA config | 2 hours |
 
-| Criterion | Score | Justification |
-|-----------|-------|---------------|
-| Performance | 5/5 | Reactivity system highly optimized, excellent bundle size |
+| Supabase setup + schema | 2 hours |---
+
+| Authentication flow | 3 hours |
+
+| Party creation + joining | 4 hours |#### Vue 3 + Vite
+
+| Real-time map integration | 6 hours |
+
+| Speed camera alerts | 3 hours || Criterion | Score | Justification |
+
+| Testing + bug fixes | 4 hours ||-----------|-------|---------------|
+
+| **Total** | **24 hours** || Performance | 5/5 | Reactivity system highly optimized, excellent bundle size |
+
 | Dev Speed | 4/5 | Clean syntax, good tooling, but smaller ecosystem than React |
-| Team Expertise | 3/5 | Less common in enterprise, steeper initial learning curve |
+
+---| Team Expertise | 3/5 | Less common in enterprise, steeper initial learning curve |
+
 | Community | 4/5 | Strong community, good documentation, but smaller than React |
-| **Weighted Total** | **4.15** | |
 
-**Conclusion:** Excellent framework, but React's larger ecosystem and team familiarity provide better development velocity for MVP timeline.
+## Getting Started| **Weighted Total** | **4.15** | |
 
----
 
-#### Angular
 
-| Criterion | Score | Justification |
-|-----------|-------|---------------|
-| Performance | 4/5 | Good performance, but heavier framework footprint |
-| Dev Speed | 3/5 | Steep learning curve, verbose, more boilerplate |
-| Team Expertise | 2/5 | Less common for PWAs, enterprise-focused |
-| Community | 4/5 | Strong enterprise support, comprehensive docs |
-| **Weighted Total** | **3.35** | |
+### 1. Create Supabase Project**Conclusion:** Excellent framework, but React's larger ecosystem and team familiarity provide better development velocity for MVP timeline.
 
-**Conclusion:** Over-engineered for MVP scope. Better suited for large enterprise applications.
+```bash
 
----
+# Visit https://supabase.com---
 
-#### Svelte + SvelteKit
+# Create new project (free tier)
+
+# Copy project URL and anon key#### Angular
+
+```
 
 | Criterion | Score | Justification |
-|-----------|-------|---------------|
+
+### 2. Create Next.js App|-----------|-------|---------------|
+
+```bash| Performance | 4/5 | Good performance, but heavier framework footprint |
+
+npx create-next-app@latest speedlink-app| Dev Speed | 3/5 | Steep learning curve, verbose, more boilerplate |
+
+cd speedlink-app| Team Expertise | 2/5 | Less common for PWAs, enterprise-focused |
+
+npm install @supabase/supabase-js @supabase/auth-helpers-nextjs| Community | 4/5 | Strong enterprise support, comprehensive docs |
+
+npm install mapbox-gl react-map-gl| **Weighted Total** | **3.35** | |
+
+npm install next-pwa
+
+```**Conclusion:** Over-engineered for MVP scope. Better suited for large enterprise applications.
+
+
+
+### 3. Environment Variables---
+
+```env
+
+NEXT_PUBLIC_SUPABASE_URL=your_project_url#### Svelte + SvelteKit
+
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+
+NEXT_PUBLIC_MAPBOX_TOKEN=your_mapbox_token| Criterion | Score | Justification |
+
+```|-----------|-------|---------------|
+
 | Performance | 5/5 | Compiles to vanilla JS, smallest bundle sizes, fastest runtime |
-| Dev Speed | 4/5 | Minimal boilerplate, elegant syntax, but smaller ecosystem |
-| Team Expertise | 2/5 | Emerging technology, limited team experience |
-| Community | 3/5 | Growing but smaller ecosystem, fewer third-party libraries |
-| **Weighted Total** | **3.65** | |
 
-**Conclusion:** Excellent performance characteristics, but ecosystem maturity and team expertise favor React for MVP timeline constraints.
+### 4. Deploy| Dev Speed | 4/5 | Minimal boilerplate, elegant syntax, but smaller ecosystem |
+
+```bash| Team Expertise | 2/5 | Emerging technology, limited team experience |
+
+# Push to GitHub| Community | 3/5 | Growing but smaller ecosystem, fewer third-party libraries |
+
+# Connect repository to Vercel| **Weighted Total** | **3.65** | |
+
+# Add environment variables
+
+# Deploy automatically**Conclusion:** Excellent performance characteristics, but ecosystem maturity and team expertise favor React for MVP timeline constraints.
+
+```
+
+---
 
 ---
 
 ### Frontend Selection: **React + Vite** ✅
 
+## Future Scaling Considerations
+
 **Rationale:**
-1. **Perfect score (5.0)** across all evaluation criteria
+
+When you outgrow the free tier:1. **Perfect score (5.0)** across all evaluation criteria
+
 2. **PWA Support:** Best-in-class with ite-plugin-pwa and workbox
-3. **Real-Time Performance:** Optimized for WebSocket integration and frequent updates
-4. **Development Velocity:** Largest ecosystem reduces implementation time
-5. **Team Expertise:** Industry standard with extensive community resources
+
+**Supabase Paid Plans:**3. **Real-Time Performance:** Optimized for WebSocket integration and frequent updates
+
+- **Pro**: $25/month - 8GB database, 50GB bandwidth4. **Development Velocity:** Largest ecosystem reduces implementation time
+
+- **Team**: $599/month - Dedicated resources, custom limits5. **Team Expertise:** Industry standard with extensive community resources
+
 6. **Timeline Validation:** 8-hour implementation estimate aligns with 29-hour MVP budget
 
----
+**Alternatives for Heavy Scale:**
 
-## 3. Backend REST API Evaluation
+- AWS RDS (PostgreSQL) + AWS ElastiCache (Redis)---
 
-### Candidates: Express, Fastify, Nest.js, Koa
+- Google Cloud SQL + Firebase Realtime Database
+
+- Self-hosted PostgreSQL + Redis## 3. Backend REST API Evaluation
+
+
+
+But start with Supabase free tier - it's more than enough for MVP and first 1000+ users!### Candidates: Express, Fastify, Nest.js, Koa
+
 
 #### Fastify
 
@@ -395,7 +543,8 @@ Client → Socket.IO → Redis (real-time state) → PostgreSQL (persistent stor
 | Criterion | Score | Justification |
 |-----------|-------|---------------|
 | Performance | 5/5 | WebGL-rendered, optimized for real-time marker updates |
-| Dev Speed | 4/5 | Good React integration (eact-map-gl), comprehensive API |
+| Dev Speed | 4/5 | Good React integration (
+eact-map-gl), comprehensive API |
 | Team Expertise | 4/5 | Industry standard for custom mapping solutions |
 | Community | 5/5 | Excellent documentation, active community |
 | **Weighted Total** | **4.60** | |
