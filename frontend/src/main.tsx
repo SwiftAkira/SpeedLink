@@ -6,6 +6,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { PartyProvider } from '@/contexts/PartyContext';
 import App from './App';
 import '@/styles/index.css';
 
@@ -21,9 +23,13 @@ const updateSW = registerSW({
   },
 });
 
-// Render React app
+// Render React app with context providers
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <AuthProvider>
+      <PartyProvider>
+        <App />
+      </PartyProvider>
+    </AuthProvider>
   </React.StrictMode>
 );

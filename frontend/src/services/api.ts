@@ -78,8 +78,8 @@ export const partyApi = {
     return response.data;
   },
 
-  join: async (partyCode: string) => {
-    const response = await apiClient.post(`/party/join`, { partyCode });
+  join: async (code: string) => {
+    const response = await apiClient.post(`/party/join`, { code });
     return response.data;
   },
 
