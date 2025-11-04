@@ -19,6 +19,7 @@ export default function MapPage() {
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const [userPartyId, setUserPartyId] = useState<string | null>(null)
   const [currentLocation, setCurrentLocation] = useState<[number, number] | undefined>()
   const [partyMembers, setPartyMembers] = useState<PartyMemberWithProfile[]>([])
@@ -44,13 +45,15 @@ export default function MapPage() {
           .eq('party.is_active', true)
           .maybeSingle()
 
-        if (!membership) {
-          setError('You are not in an active party. Please join or create a party first.')
-          setLoading(false)
-          return
+        let activePartyId: string | null = null
+        if (membership) {
+          activePartyId = membership.party_id
+          setUserPartyId(activePartyId)
+          setNotice(null)
+        } else {
+          setUserPartyId(null)
+          setNotice('You are not currently in an active party. Your location stays private until you join or create one.')
         }
-
-        setUserPartyId(membership.party_id)
 
         // Request location permission
         const hasPermission = await locationService.requestPermission()
@@ -64,7 +67,9 @@ export default function MapPage() {
         try {
           const position = await locationService.getCurrentPosition()
           setCurrentLocation([position.longitude, position.latitude])
-          await locationService.saveLocation(membership.party_id, position)
+          if (activePartyId) {
+            await locationService.saveLocation(activePartyId, position)
+          }
         } catch (err) {
           console.error('Failed to get initial position:', err)
         }
@@ -82,11 +87,11 @@ export default function MapPage() {
 
   // Start location tracking
   useEffect(() => {
-    if (!userPartyId) return
-
-    const handleLocationUpdate = async (position: LocationCoordinates) => {
+    const handleLocationUpdate = (position: LocationCoordinates) => {
       setCurrentLocation([position.longitude, position.latitude])
-      await locationService.saveLocation(userPartyId, position)
+      if (userPartyId) {
+        void locationService.saveLocation(userPartyId, position)
+      }
     }
 
     const handleLocationError = (err: GeolocationPositionError) => {
@@ -224,6 +229,20 @@ export default function MapPage() {
       isCurrentUser: member.user_id === userId,
     }))
 
+  if (currentLocation && userId) {
+    const hasCurrentUserMarker = markers.some((marker) => marker.id === userId)
+    if (!hasCurrentUserMarker) {
+      const [longitude, latitude] = currentLocation
+      markers.push({
+        id: userId,
+        latitude,
+        longitude,
+        displayName: 'You',
+        isCurrentUser: true,
+      })
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0C0C0C] flex items-center justify-center">
@@ -282,7 +301,18 @@ export default function MapPage() {
       </nav>
 
       <main className="flex-1 p-4">
-        <div className="h-full max-w-7xl mx-auto">
+        <div className="h-full max-w-7xl mx-auto space-y-4">
+          {notice && (
+            <div className="bg-[#171717] border border-[#262626] rounded-lg px-4 py-3 text-sm text-[#FAFAFA] flex flex-wrap justify-between gap-3">
+              <span>{notice}</span>
+              <button
+                onClick={() => router.push('/party')}
+                className="bg-[#262626] text-[#FAFAFA] px-4 py-2 rounded-lg hover:bg-[#404040] transition-colors font-semibold"
+              >
+                Manage Party
+              </button>
+            </div>
+          )}
           <MapView
             markers={markers}
             center={currentLocation}
@@ -293,24 +323,26 @@ export default function MapPage() {
       </main>
 
       {/* Party info overlay */}
-      <div className="absolute top-20 left-4 bg-[#0C0C0C]/90 border border-[#262626] rounded-lg p-4 backdrop-blur-sm max-w-xs">
-        <h3 className="text-[#84CC16] font-bold mb-2">Party Members ({partyMembers.length})</h3>
-        <div className="space-y-2 max-h-48 overflow-y-auto">
-          {partyMembers.map((member) => (
-            <div key={member.id} className="flex items-center justify-between text-sm">
-              <span className="text-[#FAFAFA] font-medium">
-                {member.profile.display_name || 'Anonymous'}
-                {member.user_id === userId && ' (You)'}
-              </span>
-              <span className={`text-xs px-2 py-1 rounded ${
-                member.is_online ? 'bg-[#22C55E]/20 text-[#22C55E]' : 'bg-[#DC2626]/20 text-[#DC2626]'
-              }`}>
-                {member.is_online ? 'Online' : 'Offline'}
-              </span>
-            </div>
-          ))}
+      {userPartyId && (
+        <div className="absolute top-20 left-4 bg-[#0C0C0C]/90 border border-[#262626] rounded-lg p-4 backdrop-blur-sm max-w-xs">
+          <h3 className="text-[#84CC16] font-bold mb-2">Party Members ({partyMembers.length})</h3>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {partyMembers.map((member) => (
+              <div key={member.id} className="flex items-center justify-between text-sm">
+                <span className="text-[#FAFAFA] font-medium">
+                  {member.profile.display_name || 'Anonymous'}
+                  {member.user_id === userId && ' (You)'}
+                </span>
+                <span className={`text-xs px-2 py-1 rounded ${
+                  member.is_online ? 'bg-[#22C55E]/20 text-[#22C55E]' : 'bg-[#DC2626]/20 text-[#DC2626]'
+                }`}>
+                  {member.is_online ? 'Online' : 'Offline'}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
