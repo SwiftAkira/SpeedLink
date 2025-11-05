@@ -952,6 +952,14 @@ export default function MapPage() {
         searchResults={searchResults}
         onSelectDestination={handleNavigationFromSuggestion}
         searching={searching}
+        onDismiss={
+          navigationActive
+            ? undefined // Don't allow dismissing while navigating
+            : () => {
+                // Clear search when dismissing search view
+                setSearchResults([])
+              }
+        }
       />
     </div>
   )
