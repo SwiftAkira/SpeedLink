@@ -95,6 +95,7 @@ export default function MapPage() {
   const [remainingDistance, setRemainingDistance] = useState<number | null>(null)
   const [remainingDuration, setRemainingDuration] = useState<number | null>(null)
   const [currentSpeed, setCurrentSpeed] = useState<number>(0)
+  const [currentHeading, setCurrentHeading] = useState<number | null>(null)
   const [showRoutePreview, setShowRoutePreview] = useState(false)
   const [previewDestination, setPreviewDestination] = useState<PlaceSuggestion | null>(null)
   const [previewRoute, setPreviewRoute] = useState<{
@@ -212,6 +213,11 @@ export default function MapPage() {
       // Update current speed (convert m/s to km/h)
       if (position.speed !== null && position.speed !== undefined) {
         setCurrentSpeed(position.speed * 3.6)
+      }
+
+      // Update current heading for 3D map rotation
+      if (position.heading !== null && position.heading !== undefined) {
+        setCurrentHeading(position.heading)
       }
 
       // Save to database only if in a party
@@ -747,28 +753,22 @@ export default function MapPage() {
                     }
                   : null
               }
-
               activeStep={activeStep}
+              isNavigating={navigationActive}
+              userHeading={currentHeading}
             />
           </div>
         </div>
       </main>
 
-      {/* Party Members Overlay - Compact (only shown in party mode) */}
+      {/* Party Members Overlay - Minimized pill at top */}
       {userPartyId && partyMembers.length > 0 && (
-        <div className="fixed top-2 left-2 bg-[#0C0C0C]/90 border border-[#262626] rounded-xl p-2 backdrop-blur-sm max-w-40 z-50">
-          <h3 className="text-[#84CC16] font-semibold text-xs mb-1.5">Party ({partyMembers.length})</h3>
-          <div className="space-y-1 max-h-32 overflow-y-auto">
-            {partyMembers.map((member) => (
-              <div key={member.id} className="flex items-center gap-1.5 text-xs">
-                <div className={`w-1.5 h-1.5 rounded-full ${member.is_online ? 'bg-[#22C55E]' : 'bg-[#DC2626]'}`} />
-                <span className="text-[#FAFAFA] truncate flex-1">
-                  {member.profile.display_name || 'Anonymous'}
-                  {member.user_id === userId && ' (You)'}
-                </span>
-              </div>
-            ))}
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 bg-[#0C0C0C]/95 border border-[#262626] rounded-full px-3 py-1.5 backdrop-blur-sm z-40 flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
+            <span className="text-[#84CC16] font-semibold text-xs">{partyMembers.length}</span>
           </div>
+          <span className="text-[#A3A3A3] text-xs">in party</span>
         </div>
       )}
 

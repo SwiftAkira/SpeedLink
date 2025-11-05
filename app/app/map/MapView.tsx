@@ -35,6 +35,8 @@ interface MapViewProps {
   } | null
   activeStep?: NavigationStep | null
   fitBounds?: boolean
+  isNavigating?: boolean
+  userHeading?: number | null
 }
 
 interface GeolocateEvent {
@@ -59,6 +61,8 @@ export default function MapView({
   destination,
   activeStep,
   fitBounds = false,
+  isNavigating = false,
+  userHeading = null,
 }: MapViewProps) {
   const mapRef = useRef<MapRef>(null)
   
@@ -69,6 +73,8 @@ export default function MapView({
     longitude: center?.[0] || -0.1276,
     latitude: center?.[1] || 51.5074,
     zoom: zoom,
+    pitch: 0,
+    bearing: 0,
   }), [center, zoom])
 
   // Fit bounds to route when needed
@@ -100,14 +106,29 @@ export default function MapView({
     }
   }, [fitBounds, route])
 
+  // Update map view during navigation with 3D perspective
   useEffect(() => {
     if (center && mapRef.current && !fitBounds) {
-      mapRef.current.flyTo({
-        center: [center[0], center[1]],
-        duration: 1000
-      })
+      if (isNavigating) {
+        // Navigation mode: 3D tilted view following heading
+        mapRef.current.flyTo({
+          center: [center[0], center[1]],
+          zoom: 17,
+          pitch: 60, // Tilt the map to 3D perspective
+          bearing: userHeading ?? 0, // Rotate map to face direction of travel
+          duration: 500,
+        })
+      } else {
+        // Normal mode: flat top-down view
+        mapRef.current.flyTo({
+          center: [center[0], center[1]],
+          pitch: 0,
+          bearing: 0,
+          duration: 1000
+        })
+      }
     }
-  }, [center, fitBounds])
+  }, [center, fitBounds, isNavigating, userHeading])
 
   const handleGeolocate = (e: GeolocateEvent) => {
     if (e.coords && onLocationUpdate) {
