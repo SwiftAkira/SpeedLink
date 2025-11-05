@@ -95,6 +95,17 @@ export default function MapPage() {
   const [remainingDistance, setRemainingDistance] = useState<number | null>(null)
   const [remainingDuration, setRemainingDuration] = useState<number | null>(null)
   const [currentSpeed, setCurrentSpeed] = useState<number>(0)
+  const [showRoutePreview, setShowRoutePreview] = useState(false)
+  const [previewDestination, setPreviewDestination] = useState<PlaceSuggestion | null>(null)
+  const [previewRoute, setPreviewRoute] = useState<{
+    destinationName: string
+    destinationAddress?: string | null
+    destinationCoordinates: [number, number]
+    routeGeoJSON: any
+    distanceMeters: number
+    durationSeconds: number
+    steps: NavigationStep[]
+  } | null>(null)
 
   // Computed values for permissions and modes
   // Solo mode: user can set their own destination
@@ -472,9 +483,9 @@ export default function MapPage() {
         setNavigationError(null)
         setNavigationLoading(true)
 
-        console.log('Calculating route from', currentLocation, 'to', suggestion.coordinates)
+        console.log('Calculating route preview from', currentLocation, 'to', suggestion.coordinates)
 
-        // Get route from Mapbox Directions API
+        // Get route from Mapbox Directions API for preview
         const payload = await getDrivingRoute({
           origin: currentLocation,
           destination: suggestion.coordinates,
@@ -484,17 +495,10 @@ export default function MapPage() {
 
         console.log('Route calculated successfully:', payload)
 
-        let nextState: PartyNavigationState
-
-        if (userPartyId && isPartyLeader) {
-          // Party mode: save to database so all members can see it
-          nextState = await saveNavigationState(supabase, userPartyId, userId, payload)
-        } else {
-          // Solo mode: keep navigation state local only
-          nextState = buildLocalNavigationState(userId, payload)
-        }
-
-        setNavigationState(nextState)
+        // Show route preview instead of immediately starting navigation
+        setPreviewRoute(payload)
+        setPreviewDestination(suggestion)
+        setShowRoutePreview(true)
         setSearchResults([])
         setSearchQuery('')
       } catch (err) {
@@ -506,25 +510,37 @@ export default function MapPage() {
         setNavigationLoading(false)
       }
     },
-    [canSelectDestination, currentLocation, userPartyId, isPartyLeader, supabase, userId]
+    [canSelectDestination, currentLocation, userId]
   )
 
-  // HANDLER: Handle map destination select (dropped pin)
-  const handleMapDestinationSelect = useCallback(
-    (coordinates: [number, number]) => {
-      if (!canSelectDestination) {
-        setNavigationError('Only the party leader can set the party destination.')
-        return
-      }
+  // HANDLER: Start navigation from route preview
+  const handleStartNavigation = useCallback(
+    async () => {
+      if (!previewRoute || !userId) return
 
-      void handleNavigationFromSuggestion({
-        id: `pin-${Date.now()}`,
-        name: 'Dropped Pin',
-        address: 'Selected on map',
-        coordinates,
-      })
+      try {
+        let nextState: PartyNavigationState
+
+        if (userPartyId && isPartyLeader) {
+          // Party mode: save to database so all members can see it
+          nextState = await saveNavigationState(supabase, userPartyId, userId, previewRoute)
+        } else {
+          // Solo mode: keep navigation state local only
+          nextState = buildLocalNavigationState(userId, previewRoute)
+        }
+
+        setNavigationState(nextState)
+        setShowRoutePreview(false)
+        setPreviewRoute(null)
+        setPreviewDestination(null)
+      } catch (err) {
+        console.error('Failed to start navigation:', err)
+        setNavigationError(
+          err instanceof Error ? err.message : 'Failed to start navigation'
+        )
+      }
     },
-    [canSelectDestination, handleNavigationFromSuggestion]
+    [previewRoute, userId, userPartyId, isPartyLeader, supabase]
   )
 
   // HANDLER: Clear/end navigation
@@ -690,25 +706,22 @@ export default function MapPage() {
   // MAIN UI
   return (
     <div className="h-screen bg-[#0C0C0C] flex flex-col overflow-hidden">
-      {/* Active Navigation Banner - Top */}
+      {/* Active Navigation Banner - Top (Compact) */}
       {navigationActive && activeStep && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-[#171717]/95 backdrop-blur-sm border-b border-[#262626] shadow-lg">
-          <div className="px-4 py-3 flex items-center gap-3">
-            <div className="text-3xl">{activeStep.maneuverType ? getManeuverIcon(activeStep.maneuverType, activeStep.maneuverModifier) : '→'}</div>
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-50 bg-[#0C0C0C]/95 backdrop-blur-sm border border-[#262626] rounded-2xl shadow-xl px-4 py-2 max-w-[90vw]">
+          <div className="flex items-center gap-2">
+            <div className="text-2xl">{activeStep.maneuverType ? getManeuverIcon(activeStep.maneuverType, activeStep.maneuverModifier) : '→'}</div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold text-[#FAFAFA] truncate">
+              <div className="text-xs font-bold text-[#FAFAFA] truncate">
                 {activeStep.instruction}
               </div>
-              <div className="text-xs text-[#84CC16] mt-0.5">
-                {formatDistance(activeStep.distance)} • {activeStep.name || 'Continue'}
+              <div className="text-[10px] text-[#84CC16]">
+                {formatDistance(activeStep.distance)}
               </div>
             </div>
             <div className="text-right">
-              <div className="text-lg font-bold text-[#FAFAFA]">
+              <div className="text-sm font-bold text-[#84CC16]">
                 {formatDuration(remainingDuration)}
-              </div>
-              <div className="text-xs text-[#A3A3A3]">
-                {formatDistance(remainingDistance)}
               </div>
             </div>
           </div>
@@ -734,7 +747,7 @@ export default function MapPage() {
                     }
                   : null
               }
-              onSelectDestination={canSelectDestination ? handleMapDestinationSelect : undefined}
+
               activeStep={activeStep}
             />
           </div>
@@ -743,7 +756,7 @@ export default function MapPage() {
 
       {/* Party Members Overlay - Compact (only shown in party mode) */}
       {userPartyId && partyMembers.length > 0 && (
-        <div className={`fixed left-2 bg-[#0C0C0C]/90 border border-[#262626] rounded-lg p-2 backdrop-blur-sm max-w-40 z-50 transition-all ${navigationActive && activeStep ? 'top-20' : 'top-14'}`}>
+        <div className="fixed top-2 left-2 bg-[#0C0C0C]/90 border border-[#262626] rounded-xl p-2 backdrop-blur-sm max-w-40 z-50">
           <h3 className="text-[#84CC16] font-semibold text-xs mb-1.5">Party ({partyMembers.length})</h3>
           <div className="space-y-1 max-h-32 overflow-y-auto">
             {partyMembers.map((member) => (
@@ -759,13 +772,90 @@ export default function MapPage() {
         </div>
       )}
 
+      {/* Route Preview Screen */}
+      {showRoutePreview && previewRoute && previewDestination && (
+        <div className="fixed inset-0 z-60 bg-[#0C0C0C] flex flex-col">
+          {/* Header */}
+          <div className="bg-[#171717] border-b border-[#262626] px-4 py-3 flex items-center gap-3">
+            <button
+              onClick={() => {
+                setShowRoutePreview(false)
+                setPreviewRoute(null)
+                setPreviewDestination(null)
+              }}
+              className="text-[#FAFAFA] hover:text-[#84CC16]"
+            >
+              ← Back
+            </button>
+            <div className="flex-1">
+              <div className="text-sm font-semibold text-[#FAFAFA]">{currentLocation ? 'Your Location' : 'Start'}</div>
+              <div className="text-xs text-[#A3A3A3]">→ {previewDestination.name}</div>
+            </div>
+          </div>
+
+          {/* Map with Route */}
+          <div className="flex-1 relative">
+            <MapView
+              center={currentLocation}
+              zoom={12}
+              className="h-full w-full"
+              route={previewRoute.routeGeoJSON}
+              destination={{
+                name: previewDestination.name,
+                coordinates: previewDestination.coordinates,
+              }}
+              markers={currentLocation ? [{
+                id: 'current',
+                latitude: currentLocation[1],
+                longitude: currentLocation[0],
+                isCurrentUser: true,
+              }] : []}
+            />
+          </div>
+
+          {/* Route Info Panel */}
+          <div className="bg-[#171717] border-t border-[#262626] p-4 space-y-3">
+            {/* Main Route */}
+            <div>
+              <div className="flex items-end gap-2 mb-2">
+                <div className="text-3xl font-bold text-[#FAFAFA]">{formatDuration(previewRoute.durationSeconds)}</div>
+                <div className="text-lg text-[#A3A3A3] mb-1">{formatDistance(previewRoute.distanceMeters)}</div>
+              </div>
+              <div className="text-sm text-[#FAFAFA] mb-1">Via {previewRoute.destinationAddress || previewRoute.destinationName}</div>
+              <div className="text-xs text-[#22C55E]">Best route, Typical traffic</div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  setShowRoutePreview(false)
+                  setPreviewRoute(null)
+                  setPreviewDestination(null)
+                }}
+                className="py-4 bg-[#262626] hover:bg-[#404040] text-[#84CC16] rounded-2xl font-semibold text-lg transition-colors"
+              >
+                Leave later
+              </button>
+              <button
+                onClick={handleStartNavigation}
+                className="py-4 bg-[#84CC16] hover:bg-[#65A30D] text-[#0C0C0C] rounded-2xl font-semibold text-lg transition-colors"
+              >
+                Go now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Waze-Style Bottom Sheet */}
-      <WazeBottomSheet
-        isNavigating={navigationActive}
-        currentStep={activeStep}
-        remainingDistance={remainingDistance}
-        remainingDuration={remainingDuration}
-        currentSpeed={currentSpeed}
+      {!showRoutePreview && (
+        <WazeBottomSheet
+          isNavigating={navigationActive}
+          currentStep={activeStep}
+          remainingDistance={remainingDistance}
+          remainingDuration={remainingDuration}
+          currentSpeed={currentSpeed}
         onStopNavigation={async () => {
           if (userPartyId && isPartyLeader) {
             await clearNavigationState(supabase, userPartyId)
@@ -820,7 +910,8 @@ export default function MapPage() {
                 setSearchResults([])
               }
         }
-      />
+        />
+      )}
     </div>
   )
 }

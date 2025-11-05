@@ -1,14 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import Map, {
   Marker,
-  NavigationControl,
   GeolocateControl,
   MapRef,
   Source,
   Layer,
-  type MapMouseEvent,
 } from 'react-map-gl/mapbox'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import type { FeatureCollection, LineString } from 'geojson'
@@ -35,7 +33,6 @@ interface MapViewProps {
     name: string
     coordinates: [number, number]
   } | null
-  onSelectDestination?: (coordinates: [number, number]) => void
   activeStep?: NavigationStep | null
 }
 
@@ -59,7 +56,6 @@ export default function MapView({
   className = '',
   route,
   destination,
-  onSelectDestination,
   activeStep,
 }: MapViewProps) {
   const mapRef = useRef<MapRef>(null)
@@ -87,15 +83,6 @@ export default function MapView({
       onLocationUpdate(e.coords.latitude, e.coords.longitude)
     }
   }
-
-  const handleMapClick = useCallback(
-    (event: MapMouseEvent) => {
-      if (!onSelectDestination) return
-      if ((event.originalEvent as MouseEvent | undefined)?.defaultPrevented) return
-      onSelectDestination([event.lngLat.lng, event.lngLat.lat])
-    },
-    [onSelectDestination]
-  )
 
   if (mapError) {
     return (
@@ -128,12 +115,8 @@ export default function MapView({
         mapboxAccessToken={mapboxToken}
         style={{ width: '100%', height: '100%' }}
         attributionControl={false}
-        cursor={onSelectDestination ? 'crosshair' : 'grab'}
-        onClick={handleMapClick}
+        cursor="grab"
       >
-        {/* Navigation Controls */}
-        <NavigationControl position="top-right" />
-        
         {/* Geolocate Control */}
         <GeolocateControl
           position="top-right"
