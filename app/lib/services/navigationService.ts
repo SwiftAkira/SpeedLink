@@ -42,6 +42,13 @@ interface MapboxDirectionsResponse {
           modifier?: string
           location: [number, number]
         }
+        intersections?: Array<{
+          lanes?: Array<{
+            valid: boolean
+            active?: boolean
+            indications: string[]
+          }>
+        }>
       }>
     }>
   }>
@@ -174,6 +181,8 @@ export const getDrivingRoute = async (
     overview: 'full',
     steps: 'true',
     language: 'en',
+    banner_instructions: 'true',
+    voice_instructions: 'true',
   })
 
   const response = await fetch(
@@ -209,6 +218,13 @@ export const getDrivingRoute = async (
 
   route.legs.forEach((leg, legIndex) => {
     leg.steps.forEach((step, stepIndex) => {
+      // Extract lane information from the first intersection if available
+      const lanes = step.intersections?.[0]?.lanes?.map(lane => ({
+        valid: lane.valid,
+        active: lane.active ?? false,
+        indications: lane.indications,
+      }))
+
       steps.push({
         id: `${legIndex}-${stepIndex}`,
         instruction: step.maneuver.instruction,
@@ -218,6 +234,7 @@ export const getDrivingRoute = async (
         maneuverType: step.maneuver.type ?? null,
         maneuverModifier: step.maneuver.modifier ?? null,
         maneuverLocation: step.maneuver.location,
+        lanes: lanes && lanes.length > 0 ? lanes : undefined,
       })
     })
   })

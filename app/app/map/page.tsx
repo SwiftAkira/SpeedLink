@@ -8,6 +8,7 @@ import { getVoiceNavigationService } from '@/lib/services/voiceNavigationService
 import { reportHazard } from '@/lib/services/hazardService'
 import MapView, { type MarkerData } from './MapView'
 import WazeBottomSheet from './WazeBottomSheet'
+import LaneGuidance from './LaneGuidance'
 import type {
   PartyMember,
   Profile,
@@ -712,9 +713,18 @@ export default function MapPage() {
   // MAIN UI
   return (
     <div className="h-screen bg-[#0C0C0C] flex flex-col overflow-hidden">
-      {/* Active Navigation Banner - Top (Compact) */}
+      {/* Lane Guidance - Top Center (when available) */}
+      {navigationActive && activeStep?.lanes && activeStep.lanes.length > 0 && (
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-50">
+          <LaneGuidance lanes={activeStep.lanes} />
+        </div>
+      )}
+
+      {/* Active Navigation Banner - Below Lane Guidance */}
       {navigationActive && activeStep && (
-        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-50 bg-[#0C0C0C]/95 backdrop-blur-sm border border-[#262626] rounded-2xl shadow-xl px-4 py-2 max-w-[90vw]">
+        <div className={`fixed left-1/2 -translate-x-1/2 z-50 bg-[#0C0C0C]/95 backdrop-blur-sm border border-[#262626] rounded-2xl shadow-xl px-4 py-2 max-w-[90vw] ${
+          activeStep.lanes && activeStep.lanes.length > 0 ? 'top-24' : 'top-2'
+        }`}>
           <div className="flex items-center gap-2">
             <div className="text-2xl">{activeStep.maneuverType ? getManeuverIcon(activeStep.maneuverType, activeStep.maneuverModifier) : '→'}</div>
             <div className="flex-1 min-w-0">
@@ -761,9 +771,11 @@ export default function MapPage() {
         </div>
       </main>
 
-      {/* Party Members Overlay - Minimized pill at top */}
+      {/* Party Members Overlay - Minimized pill (positioned to avoid lane guidance) */}
       {userPartyId && partyMembers.length > 0 && (
-        <div className="fixed top-14 left-1/2 -translate-x-1/2 bg-[#0C0C0C]/95 border border-[#262626] rounded-full px-3 py-1.5 backdrop-blur-sm z-40 flex items-center gap-2">
+        <div className={`fixed left-1/2 -translate-x-1/2 bg-[#0C0C0C]/95 border border-[#262626] rounded-full px-3 py-1.5 backdrop-blur-sm z-40 flex items-center gap-2 ${
+          navigationActive && activeStep?.lanes && activeStep.lanes.length > 0 ? 'top-32' : 'top-14'
+        }`}>
           <div className="flex items-center gap-1">
             <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
             <span className="text-[#84CC16] font-semibold text-xs">{partyMembers.length}</span>

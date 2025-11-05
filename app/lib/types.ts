@@ -69,6 +69,12 @@ export interface PartyMemberWithLocation extends PartyMember {
 // =============================================
 // Navigation Types
 // =============================================
+export interface LaneInfo {
+  valid: boolean;
+  active: boolean;
+  indications: string[];
+}
+
 export interface NavigationStep {
   id: string;
   instruction: string;
@@ -78,6 +84,7 @@ export interface NavigationStep {
   maneuverType?: string | null;
   maneuverModifier?: string | null;
   maneuverLocation: [number, number];
+  lanes?: LaneInfo[];
 }
 
 export interface PartyNavigationState {
