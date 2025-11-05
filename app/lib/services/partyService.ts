@@ -38,31 +38,88 @@ export async function createParty(
       return { data: null, error: 'User not authenticated' };
     }
 
-    // Generate unique party code
-    const { data: codeData, error: codeError } = await supabase.rpc(
-      'generate_party_code'
-    );
-
-    if (codeError || !codeData) {
-      return { data: null, error: 'Failed to generate party code' };
-    }
-
-    const party_code = codeData as string;
-
-    // Create party
-    const { data: party, error: partyError } = await supabase
-      .from('parties')
-      .insert({
-        party_code,
-        name: input.name || null,
-        created_by: user.id,
-        is_active: true,
-      })
-      .select()
+    // Ensure user profile exists before creating party
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
       .single();
 
-    if (partyError || !party) {
-      return { data: null, error: partyError?.message || 'Failed to create party' };
+    if (profileError || !profile) {
+      // Try to create profile if it doesn't exist
+      const { error: createProfileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email,
+          display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || 'User',
+        });
+
+      if (createProfileError) {
+        return { data: null, error: 'User profile not found. Please try logging out and back in.' };
+      }
+    }
+
+    // Generate unique party code with client-side generation and verification
+    let party: Party | null = null;
+    let party_code: string = '';
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (attempts < maxAttempts && !party) {
+      attempts++;
+
+      // Generate a random 6-digit code
+      party_code = Math.floor(100000 + Math.random() * 900000).toString();
+
+      // Check if code already exists
+      const { data: existingParty } = await supabase
+        .from('parties')
+        .select('id')
+        .eq('party_code', party_code)
+        .maybeSingle();
+
+      if (existingParty) {
+        console.log(`Party code ${party_code} already exists, trying again...`);
+        continue; // Try another code
+      }
+
+      // Create party
+      const { data: partyData, error: partyError } = await supabase
+        .from('parties')
+        .insert({
+          party_code,
+          name: input.name || null,
+          created_by: user.id,
+          is_active: true,
+        })
+        .select()
+        .single();
+
+      if (partyError) {
+        console.error(`Party creation attempt ${attempts} failed:`, {
+          code: partyError.code,
+          message: partyError.message,
+          details: partyError.details,
+          hint: partyError.hint,
+        });
+        
+        // If it's a unique constraint violation (409), retry with a new code
+        if (partyError.code === '23505' || partyError.message?.includes('duplicate') || partyError.message?.includes('unique')) {
+          if (attempts >= maxAttempts) {
+            return { data: null, error: 'Failed to create unique party code. Please try again.' };
+          }
+          continue;
+        }
+        // For other errors, fail immediately
+        return { data: null, error: partyError.message || 'Failed to create party' };
+      }
+
+      party = partyData as Party;
+    }
+
+    if (!party) {
+      return { data: null, error: 'Failed to create party after multiple attempts' };
     }
 
     // Automatically add creator as first member
@@ -87,7 +144,10 @@ export async function createParty(
     };
   } catch (error) {
     console.error('Error creating party:', error);
-    return { data: null, error: 'An unexpected error occurred' };
+    return { 
+      data: null, 
+      error: error instanceof Error ? error.message : 'An unexpected error occurred' 
+    };
   }
 }
 
@@ -113,6 +173,28 @@ export async function joinParty(
 
     if (userError || !user) {
       return { data: null, error: 'User not authenticated' };
+    }
+
+    // Ensure user profile exists before joining party
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      // Try to create profile if it doesn't exist
+      const { error: createProfileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email,
+          display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || 'User',
+        });
+
+      if (createProfileError) {
+        return { data: null, error: 'User profile not found. Please try logging out and back in.' };
+      }
     }
 
     // Find party by code
@@ -221,15 +303,20 @@ export async function getCurrentParty(): Promise<ApiResponse<PartyWithMembers>> 
       return { data: null, error: 'User not authenticated' };
     }
 
-    // Get user's party membership
+    // Get user's party membership with better error handling
     const { data: membership, error: memberError } = await supabase
       .from('party_members')
       .select('party_id')
       .eq('user_id', user.id)
       .limit(1)
-      .single();
+      .maybeSingle(); // Use maybeSingle() instead of single() to handle no results gracefully
 
-    if (memberError || !membership) {
+    if (memberError) {
+      console.error('Error fetching party membership:', memberError);
+      return { data: null, error: memberError.message };
+    }
+
+    if (!membership) {
       return { data: null, error: null }; // Not in a party
     }
 

@@ -223,15 +223,13 @@ export class LocationService {
   /**
    * Private: Handle geolocation errors
    */
-  private handlePositionError(error: GeolocationPositionError): void {
-    console.error('Geolocation error:', error.message)
-    
+  private handlePositionError = (error: GeolocationPositionError): void => {
+    console.error(`Geolocation error: "${error.message}" (Code: ${error.code})`)
+
     if (this.onError) {
       this.onError(error)
     }
-  }
-
-  /**
+  }  /**
    * Private: Parse browser GeolocationPosition to our format
    */
   private parsePosition(position: GeolocationPosition): LocationCoordinates {
