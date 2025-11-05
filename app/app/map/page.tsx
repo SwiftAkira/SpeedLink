@@ -5,11 +5,15 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getLocationService, type LocationCoordinates } from '@/lib/services/locationService'
 import { getVoiceNavigationService } from '@/lib/services/voiceNavigationService'
+import { getSpeedCameraService } from '@/lib/services/speedCameraService'
+import { startWazeSync, stopWazeSync, refreshWazeCameras } from '@/lib/services/wazeCameraService'
 import { reportHazard } from '@/lib/services/hazardService'
 import MapView, { type MarkerData } from './MapView'
 import WazeBottomSheet from './WazeBottomSheet'
 import LaneGuidance from './LaneGuidance'
 import DebugPanel from './DebugPanel'
+import SpeedCameraAlert from './SpeedCameraAlert'
+import SpeedCameraMarker from './SpeedCameraMarker'
 import type {
   PartyMember,
   Profile,
@@ -18,6 +22,8 @@ import type {
   NavigationStep,
   HazardType,
   RouteOptions,
+  CameraAlert,
+  SpeedCameraWithDistance,
 } from '@/lib/types'
 import {
   searchPlaces,
@@ -76,6 +82,7 @@ export default function MapPage() {
   const supabase = createClient()
   const locationService = getLocationService()
   const voiceService = getVoiceNavigationService()
+  const cameraService = getSpeedCameraService()
 
   // State management
   const [loading, setLoading] = useState(true)
@@ -98,6 +105,12 @@ export default function MapPage() {
   const [remainingDuration, setRemainingDuration] = useState<number | null>(null)
   const [currentSpeed, setCurrentSpeed] = useState<number>(0)
   const [currentHeading, setCurrentHeading] = useState<number | null>(null)
+  
+  // Speed camera state
+  const [cameraAlerts, setCameraAlerts] = useState<CameraAlert[]>([])
+  const [nearbyCameras, setNearbyCameras] = useState<SpeedCameraWithDistance[]>([])
+  const [selectedCamera, setSelectedCamera] = useState<SpeedCameraWithDistance | null>(null)
+  const [wazeSyncInterval, setWazeSyncInterval] = useState<NodeJS.Timeout | null>(null)
   const [showRoutePreview, setShowRoutePreview] = useState(false)
   const [isSimulating, setIsSimulating] = useState(false)
   const [previewDestination, setPreviewDestination] = useState<PlaceSuggestion | null>(null)
@@ -185,6 +198,15 @@ export default function MapPage() {
           if (activePartyId) {
             await locationService.saveLocation(activePartyId, position)
           }
+
+          // Start Waze sync for real-time camera updates
+          const interval = await startWazeSync(5, {
+            lat: position.latitude,
+            lon: position.longitude,
+          })
+          if (interval && isMounted) {
+            setWazeSyncInterval(interval)
+          }
         } catch (initialPositionError) {
           console.error('Failed to get initial position:', initialPositionError)
         }
@@ -205,8 +227,12 @@ export default function MapPage() {
 
     return () => {
       isMounted = false
+      // Cleanup Waze sync on unmount
+      if (wazeSyncInterval) {
+        stopWazeSync(wazeSyncInterval)
+      }
     }
-  }, [router, supabase, locationService])
+  }, [router, supabase, locationService, wazeSyncInterval])
 
   // STEP 2: Track location updates continuously
   useEffect(() => {
@@ -214,13 +240,52 @@ export default function MapPage() {
       setCurrentLocation([position.longitude, position.latitude])
       
       // Update current speed (convert m/s to km/h)
+      const speedKmh = position.speed !== null ? position.speed * 3.6 : 0
       if (position.speed !== null && position.speed !== undefined) {
-        setCurrentSpeed(position.speed * 3.6)
+        setCurrentSpeed(speedKmh)
       }
 
       // Update current heading for 3D map rotation
       if (position.heading !== null && position.heading !== undefined) {
         setCurrentHeading(position.heading)
+      }
+
+      // Check for nearby speed cameras
+      try {
+        const alerts = await cameraService.checkForAlerts(
+          position.latitude,
+          position.longitude,
+          position.heading
+        )
+        
+        setCameraAlerts(alerts)
+        
+        // Save alert history for high priority alerts
+        if (userId && alerts.length > 0) {
+          alerts.forEach(async (alert) => {
+            if (alert.priority === 'high' || alert.priority === 'medium') {
+              await cameraService.saveAlertHistory(
+                userId,
+                alert.camera.id,
+                alert.camera.distance_meters,
+                speedKmh > 0 ? Math.round(speedKmh) : null,
+                userPartyId
+              )
+              // Mark as alerted to prevent duplicates
+              cameraService.markAsAlerted(alert.camera.id)
+            }
+          })
+        }
+        
+        // Fetch nearby cameras for map display (2km radius)
+        const cameras = await cameraService.getNearbyCameras(
+          position.latitude,
+          position.longitude,
+          2000
+        )
+        setNearbyCameras(cameras)
+      } catch (err) {
+        console.error('Failed to check speed cameras:', err)
       }
 
       // Save to database only if in a party
@@ -243,7 +308,7 @@ export default function MapPage() {
     return () => {
       locationService.stopTracking()
     }
-  }, [userPartyId, locationService])
+  }, [userPartyId, userId, locationService, cameraService])
 
   // STEP 3: Fetch party members (only if in party)
   const fetchPartyMembers = useCallback(async () => {
@@ -809,6 +874,16 @@ export default function MapPage() {
   // MAIN UI
   return (
     <div className="h-screen bg-[#0C0C0C] flex flex-col overflow-hidden">
+      {/* Speed Camera Alerts - Highest Priority */}
+      <SpeedCameraAlert
+        alerts={cameraAlerts}
+        onDismiss={(cameraId) => {
+          cameraService.clearAlert(cameraId)
+          setCameraAlerts((prev) => prev.filter((alert) => alert.camera.id !== cameraId))
+        }}
+        enableAudio={true}
+      />
+      
       {/* Lane Guidance - Top Center (when available) */}
       {navigationActive && activeStep?.lanes && activeStep.lanes.length > 0 && (
         <div className="fixed top-2 left-1/2 -translate-x-1/2 z-50">
@@ -862,6 +937,8 @@ export default function MapPage() {
               activeStep={activeStep}
               isNavigating={navigationActive}
               userHeading={currentHeading}
+              speedCameras={nearbyCameras}
+              onCameraClick={setSelectedCamera}
             />
           </div>
         </div>

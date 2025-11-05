@@ -166,6 +166,52 @@ export interface RouteOptions {
 }
 
 // =============================================
+// Speed Camera Types (Epic 5)
+// =============================================
+export type CameraType = 'fixed' | 'mobile' | 'red_light' | 'average_speed' | 'section';
+
+export interface SpeedCamera {
+  id: string;
+  latitude: number;
+  longitude: number;
+  camera_type: CameraType;
+  speed_limit: number;
+  direction: string | null;
+  road_name: string | null;
+  location_description: string | null;
+  is_active: boolean;
+  verified: boolean;
+  source: string;
+  reported_by: string | null;
+  created_at: string;
+  updated_at: string;
+  verified_at: string | null;
+}
+
+export interface SpeedCameraWithDistance extends SpeedCamera {
+  distance_meters: number;
+}
+
+export interface CameraAlertHistory {
+  id: string;
+  user_id: string;
+  camera_id: string;
+  party_id: string | null;
+  distance_meters: number;
+  user_speed: number | null;
+  alerted_at: string;
+  was_useful: boolean | null;
+  feedback: string | null;
+}
+
+export interface CameraAlert {
+  camera: SpeedCameraWithDistance;
+  priority: 'high' | 'medium' | 'low'; // Based on distance
+  direction_match: boolean; // If user heading matches camera direction
+  timestamp: number;
+}
+
+// =============================================
 // Response Types
 // =============================================
 export interface ApiResponse<T> {

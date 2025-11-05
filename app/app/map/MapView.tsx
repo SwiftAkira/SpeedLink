@@ -10,7 +10,7 @@ import Map, {
 } from 'react-map-gl/mapbox'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import type { FeatureCollection, LineString } from 'geojson'
-import type { LaneInfo, NavigationStep } from '@/lib/types'
+import type { LaneInfo, NavigationStep, SpeedCameraWithDistance } from '@/lib/types'
 
 export interface MarkerData {
   id: string
@@ -37,6 +37,8 @@ interface MapViewProps {
   fitBounds?: boolean
   isNavigating?: boolean
   userHeading?: number | null
+  speedCameras?: SpeedCameraWithDistance[]
+  onCameraClick?: (camera: SpeedCameraWithDistance) => void
 }
 
 interface GeolocateEvent {
@@ -63,6 +65,8 @@ export default function MapView({
   fitBounds = false,
   isNavigating = false,
   userHeading = null,
+  speedCameras = [],
+  onCameraClick,
 }: MapViewProps) {
   const mapRef = useRef<MapRef>(null)
   
@@ -243,6 +247,35 @@ export default function MapView({
                   {marker.displayName}
                 </div>
               )}
+            </div>
+          </Marker>
+        ))}
+
+        {/* Speed Camera Markers */}
+        {speedCameras.map((camera) => (
+          <Marker
+            key={camera.id}
+            longitude={camera.longitude}
+            latitude={camera.latitude}
+            anchor="center"
+            onClick={(e) => {
+              e.originalEvent?.stopPropagation()
+              onCameraClick?.(camera)
+            }}
+          >
+            <div className="relative cursor-pointer transition-transform hover:scale-110 active:scale-95" style={{ width: '32px', height: '32px' }}>
+              {camera.distance_meters < 500 && (
+                <div className="absolute inset-0 rounded-full animate-ping opacity-75 bg-red-600" />
+              )}
+              <div className="absolute inset-0 rounded-full flex items-center justify-center shadow-lg bg-red-600">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                </svg>
+              </div>
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white text-black text-xs font-bold px-1.5 py-0.5 rounded shadow-md whitespace-nowrap" style={{ fontSize: '10px' }}>
+                {camera.speed_limit}
+              </div>
             </div>
           </Marker>
         ))}
