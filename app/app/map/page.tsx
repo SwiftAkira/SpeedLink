@@ -9,6 +9,7 @@ import { reportHazard } from '@/lib/services/hazardService'
 import MapView, { type MarkerData } from './MapView'
 import WazeBottomSheet from './WazeBottomSheet'
 import LaneGuidance from './LaneGuidance'
+import DebugPanel from './DebugPanel'
 import type {
   PartyMember,
   Profile,
@@ -98,6 +99,7 @@ export default function MapPage() {
   const [currentSpeed, setCurrentSpeed] = useState<number>(0)
   const [currentHeading, setCurrentHeading] = useState<number | null>(null)
   const [showRoutePreview, setShowRoutePreview] = useState(false)
+  const [isSimulating, setIsSimulating] = useState(false)
   const [previewDestination, setPreviewDestination] = useState<PlaceSuggestion | null>(null)
   const [previewRoute, setPreviewRoute] = useState<{
     destinationName: string
@@ -615,6 +617,93 @@ export default function MapPage() {
     [searchResults, handleNavigationFromSuggestion]
   )
 
+  // DEBUG: Simulate driving from Almere to Amsterdam Zuid
+  const startSimulation = useCallback(async () => {
+    if (!userId) return
+    
+    setIsSimulating(true)
+    
+    // Start location: Jaap ter Haarstraat 4, 1321 LE Almere
+    const startCoords: [number, number] = [5.2147, 52.3507]
+    // End location: Amsterdam Zuid
+    const endCoords: [number, number] = [4.8740, 52.3389]
+    
+    // Set initial position
+    setCurrentLocation(startCoords)
+    
+    try {
+      // Calculate route
+      const route = await getDrivingRoute({
+        origin: startCoords,
+        destination: endCoords,
+        destinationName: 'Amsterdam Zuid',
+        destinationAddress: 'Amsterdam Zuid Station',
+      })
+      
+      // Start navigation
+      let nextState: PartyNavigationState
+      if (userPartyId && isPartyLeader) {
+        nextState = await saveNavigationState(supabase, userPartyId, userId, route)
+      } else {
+        nextState = buildLocalNavigationState(userId, route)
+      }
+      setNavigationState(nextState)
+      
+      // Simulate movement along route
+      const coordinates = route.routeGeoJSON.features[0].geometry.coordinates as [number, number][]
+      let index = 0
+      
+      const interval = setInterval(() => {
+        if (index >= coordinates.length - 1) {
+          clearInterval(interval)
+          setIsSimulating(false)
+          return
+        }
+        
+        const [lng, lat] = coordinates[index]
+        const [nextLng, nextLat] = coordinates[index + 1]
+        
+        // Calculate heading (bearing between two points)
+        const dLng = nextLng - lng
+        const dLat = nextLat - lat
+        const heading = (Math.atan2(dLng, dLat) * 180 / Math.PI + 360) % 360
+        
+        // Calculate speed based on road type (simulate highway speeds)
+        // Check if we're on highway (faster movement through coordinates = highway)
+        const distance = Math.sqrt(dLng * dLng + dLat * dLat)
+        let speed = 50 // default city speed
+        
+        if (distance > 0.001) {
+          speed = 120 // highway speed
+        } else if (distance > 0.0005) {
+          speed = 80 // main road
+        }
+        
+        setCurrentLocation([lng, lat])
+        setCurrentHeading(heading)
+        setCurrentSpeed(speed)
+        
+        // Jump more points on highway for faster simulation
+        if (speed === 120) {
+          index += 3
+        } else if (speed === 80) {
+          index += 2
+        } else {
+          index += 1
+        }
+      }, 1000) // Update every second
+      
+    } catch (err) {
+      console.error('Simulation error:', err)
+      setIsSimulating(false)
+    }
+  }, [userId, userPartyId, isPartyLeader, supabase])
+
+  const stopSimulation = useCallback(() => {
+    setIsSimulating(false)
+    // Don't clear navigation, just stop the simulation
+  }, [])
+
   // Build markers array for map display
   const markers: MarkerData[] = partyMembers
     .filter((member) => member.location)
@@ -925,6 +1014,13 @@ export default function MapPage() {
         }
         />
       )}
+
+      {/* Debug Panel - Test Simulation */}
+      <DebugPanel 
+        onStartSimulation={startSimulation}
+        onStopSimulation={stopSimulation}
+        isSimulating={isSimulating}
+      />
     </div>
   )
 }
