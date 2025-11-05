@@ -11,6 +11,7 @@ import Map, {
 import 'mapbox-gl/dist/mapbox-gl.css'
 import type { FeatureCollection, LineString } from 'geojson'
 import type { NavigationStep } from '@/lib/types'
+import LaneOverlay from './LaneOverlay'
 
 export interface MarkerData {
   id: string
@@ -277,6 +278,15 @@ export default function MapView({
               </div>
             </div>
           </Marker>
+        )}
+
+        {/* Lane Overlay - Amap style lanes on road */}
+        {isNavigating && activeStep?.lanes && center && userHeading !== null && (
+          <LaneOverlay
+            lanes={activeStep.lanes}
+            position={center}
+            heading={userHeading}
+          />
         )}
       </Map>
 
