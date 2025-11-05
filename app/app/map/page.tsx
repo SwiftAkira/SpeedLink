@@ -558,6 +558,30 @@ export default function MapPage() {
   }, [navigationActive, canManageNavigation, userPartyId, supabase])
 
   // HANDLER: Handle search form submit
+  // Handler for search input from WazeBottomSheet
+  const handleSearch = useCallback(
+    async (query: string) => {
+      if (query.length < 3) {
+        setSearchResults([])
+        return
+      }
+
+      try {
+        setSearching(true)
+        const results = await searchPlaces(query, {
+          proximity: currentLocation,
+        })
+        setSearchResults(results)
+      } catch (err) {
+        console.error('Search error:', err)
+        setSearchResults([])
+      } finally {
+        setSearching(false)
+      }
+    },
+    [currentLocation]
+  )
+
   const handleSearchSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault()
@@ -924,6 +948,10 @@ export default function MapPage() {
             console.error('Failed to recalculate route:', err)
           }
         }}
+        onSearch={handleSearch}
+        searchResults={searchResults}
+        onSelectDestination={handleNavigationFromSuggestion}
+        searching={searching}
       />
     </div>
   )

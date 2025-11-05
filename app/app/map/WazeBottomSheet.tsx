@@ -3,6 +3,13 @@
 import { useState } from 'react';
 import type { NavigationStep, RouteOptions, HazardType } from '@/lib/types';
 
+interface SearchResult {
+  id: string;
+  name: string;
+  address?: string;
+  coordinates: [number, number];
+}
+
 interface WazeBottomSheetProps {
   isNavigating: boolean;
   currentStep: NavigationStep | null;
@@ -13,6 +20,10 @@ interface WazeBottomSheetProps {
   onStopNavigation: () => void;
   onReportHazard: (hazardType: HazardType) => void;
   onChangeRoute: (options: RouteOptions) => void;
+  onSearch?: (query: string) => void;
+  searchResults?: SearchResult[];
+  onSelectDestination?: (result: SearchResult) => void;
+  searching?: boolean;
 }
 
 export default function WazeBottomSheet({
@@ -25,10 +36,15 @@ export default function WazeBottomSheet({
   onStopNavigation,
   onReportHazard,
   onChangeRoute,
+  onSearch,
+  searchResults = [],
+  onSelectDestination,
+  searching = false,
 }: WazeBottomSheetProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showHazardMenu, setShowHazardMenu] = useState(false);
   const [showRouteOptions, setShowRouteOptions] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const formatDistance = (meters: number | null): string => {
     if (!meters || !Number.isFinite(meters)) return '--';
@@ -262,9 +278,67 @@ export default function WazeBottomSheet({
               )}
             </>
           ) : (
-            <div className="text-center py-8">
-              <div className="text-gray-400 text-lg">No active navigation</div>
-              <div className="text-gray-400 text-sm mt-2">Search for a destination to start</div>
+            <div className="space-y-4">
+              {/* Search Bar */}
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    if (onSearch && e.target.value.length > 2) {
+                      onSearch(e.target.value);
+                    }
+                  }}
+                  placeholder="🔍 Search for a destination..."
+                  className="w-full p-4 pr-12 text-lg rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none"
+                />
+                {searching && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <div className="animate-spin h-6 w-6 border-3 border-blue-500 border-t-transparent rounded-full" />
+                  </div>
+                )}
+              </div>
+
+              {/* Search Results */}
+              {searchResults.length > 0 && (
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  {searchResults.map((result) => (
+                    <button
+                      key={result.id}
+                      onClick={() => {
+                        if (onSelectDestination) {
+                          onSelectDestination(result);
+                          setSearchQuery('');
+                        }
+                      }}
+                      className="w-full p-4 bg-gray-50 hover:bg-gray-100 rounded-xl text-left transition-colors"
+                    >
+                      <div className="font-semibold text-gray-900">{result.name}</div>
+                      {result.address && (
+                        <div className="text-sm text-gray-600 mt-1">{result.address}</div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* No Results State */}
+              {searchQuery.length > 0 && !searching && searchResults.length === 0 && (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 text-lg">No results found</div>
+                  <div className="text-gray-400 text-sm mt-2">Try a different search term</div>
+                </div>
+              )}
+
+              {/* Initial State */}
+              {searchQuery.length === 0 && (
+                <div className="text-center py-8">
+                  <div className="text-6xl mb-4">📍</div>
+                  <div className="text-gray-700 text-lg font-semibold mb-2">Where to?</div>
+                  <div className="text-gray-500 text-sm">Search for a destination to start navigating</div>
+                </div>
+              )}
             </div>
           )}
         </div>
