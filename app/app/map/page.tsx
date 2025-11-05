@@ -666,192 +666,58 @@ export default function MapPage() {
       }
     : null
 
+  // Helper function for maneuver icons
+  const getManeuverIcon = (type?: string | null, modifier?: string | null): string => {
+    if (!type) return '→';
+    
+    const maneuverMap: Record<string, string> = {
+      'turn-slight-left': '↖',
+      'turn-left': '←',
+      'turn-sharp-left': '↙',
+      'turn-slight-right': '↗',
+      'turn-right': '→',
+      'turn-sharp-right': '↘',
+      'straight': '↑',
+      'uturn': '↩',
+      'roundabout': '⟳',
+      'arrive': '📍',
+    };
+
+    const key = modifier ? `${type}-${modifier}` : type;
+    return maneuverMap[key] || maneuverMap[type] || '→';
+  };
+
   // MAIN UI
   return (
-    <div className="min-h-screen bg-[#0C0C0C] flex flex-col">
-      {/* Navigation Bar */}
-      <nav className="bg-[#171717] border-b border-[#262626]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-extrabold text-[#FAFAFA]">
-              🏍️ {isSoloMode ? 'Solo Navigation' : 'Group Navigation'}
-            </h1>
-            {partyName && <p className="text-xs text-[#A3A3A3] mt-1">Party: {partyName}</p>}
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => router.push('/party')}
-              className="bg-[#262626] text-[#FAFAFA] px-4 py-2 rounded-lg hover:bg-[#404040] transition-colors font-semibold"
-            >
-              Party
-            </button>
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="bg-[#262626] text-[#FAFAFA] px-4 py-2 rounded-lg hover:bg-[#404040] transition-colors font-semibold"
-            >
-              Dashboard
-            </button>
+    <div className="h-screen bg-[#0C0C0C] flex flex-col overflow-hidden">
+      {/* Active Navigation Banner - Top */}
+      {navigationActive && activeStep && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-[#171717]/95 backdrop-blur-sm border-b border-[#262626] shadow-lg">
+          <div className="px-4 py-3 flex items-center gap-3">
+            <div className="text-3xl">{activeStep.maneuverType ? getManeuverIcon(activeStep.maneuverType, activeStep.maneuverModifier) : '→'}</div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold text-[#FAFAFA] truncate">
+                {activeStep.instruction}
+              </div>
+              <div className="text-xs text-[#84CC16] mt-0.5">
+                {formatDistance(activeStep.distance)} • {activeStep.name || 'Continue'}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-lg font-bold text-[#FAFAFA]">
+                {formatDuration(remainingDuration)}
+              </div>
+              <div className="text-xs text-[#A3A3A3]">
+                {formatDistance(remainingDistance)}
+              </div>
+            </div>
           </div>
         </div>
-      </nav>
+      )}
 
       {/* Main Content */}
-      <main className="flex-1 p-4">
-        <div className="h-full max-w-7xl mx-auto space-y-4">
-          {/* Notice Banner */}
-          {notice && (
-            <div className="bg-[#171717] border border-[#262626] rounded-lg px-4 py-3 text-sm text-[#FAFAFA] flex flex-wrap justify-between gap-3">
-              <span>{notice}</span>
-              {isSoloMode && (
-                <button
-                  onClick={() => router.push('/party')}
-                  className="bg-[#84CC16] text-black px-4 py-2 rounded-lg hover:bg-[#65A30D] transition-colors font-semibold"
-                >
-                  Join a Party
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Navigation Controls Section */}
-          <section className="bg-[#171717] border border-[#262626] rounded-lg p-4 space-y-4">
-            <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-              <div>
-                <h2 className="text-lg font-bold text-[#FAFAFA]">Navigation</h2>
-                <p className="text-xs text-[#A3A3A3]">
-                  {isSoloMode
-                    ? 'Search for a destination or drop a pin on the map to start navigating.'
-                    : canSelectDestination
-                    ? 'As party leader, set the destination for everyone in your group.'
-                    : 'Following the party leader\'s route. Only the leader can change the destination.'}
-                </p>
-              </div>
-              {navigationActive && canManageNavigation && (
-                <button
-                  onClick={handleClearNavigation}
-                  className="bg-[#DC2626] text-[#FAFAFA] px-4 py-2 rounded-lg hover:bg-[#B91C1C] transition-colors font-semibold"
-                >
-                  End Navigation
-                </button>
-              )}
-            </header>
-
-            {/* Search Form */}
-            <form onSubmit={handleSearchSubmit} className="space-y-2">
-              <label htmlFor="destination" className="text-xs uppercase tracking-wide text-[#A3A3A3]">
-                Destination
-              </label>
-              <div className="relative">
-                <input
-                  id="destination"
-                  type="text"
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder={
-                    canSelectDestination
-                      ? 'Search for a place or drop a pin'
-                      : 'Waiting for party leader to select a destination'
-                  }
-                  disabled={!canSelectDestination || navigationLoading}
-                  className="w-full rounded-lg border border-[#262626] bg-[#0C0C0C] px-4 py-3 text-sm text-[#FAFAFA] placeholder:text-[#525252] focus:outline-none focus:ring-2 focus:ring-[#38BDF8] disabled:opacity-60"
-                />
-                {searching && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#A3A3A3]">
-                    Searching...
-                  </span>
-                )}
-              </div>
-            </form>
-
-            {/* Navigation Error */}
-            {navigationError && (
-              <div className="rounded-lg border border-[#DC2626] bg-[#DC2626]/10 px-4 py-3 text-sm text-[#FCA5A5]">
-                {navigationError}
-              </div>
-            )}
-
-            {/* Search Results */}
-            {searchResults.length > 0 && canSelectDestination && (
-              <div className="rounded-lg border border-[#262626] bg-[#0C0C0C] divide-y divide-[#1F1F1F]">
-                {searchResults.map((result: PlaceSuggestion) => (
-                  <button
-                    key={result.id}
-                    type="button"
-                    onClick={() => handleNavigationFromSuggestion(result)}
-                    className="w-full text-left px-4 py-3 hover:bg-[#1F2937] transition-colors"
-                  >
-                    <p className="text-sm font-semibold text-[#FAFAFA]">{result.name}</p>
-                    {result.address && <p className="text-xs text-[#A3A3A3] mt-1">{result.address}</p>}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Active Navigation Display */}
-            {destinationSummary && (
-              <div className="rounded-lg border border-[#262626] bg-[#0C0C0C] p-4 space-y-3">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                  <div>
-                    <p className="text-sm text-[#A3A3A3]">Active route</p>
-                    <h3 className="text-lg font-semibold text-[#FAFAFA]">{destinationSummary.name}</h3>
-                    {destinationSummary.address && (
-                      <p className="text-xs text-[#A3A3A3] mt-1">{destinationSummary.address}</p>
-                    )}
-                  </div>
-                  <div className="text-right text-sm text-[#FAFAFA]">
-                    <p className="text-xs text-[#A3A3A3]">{formatDistance(destinationSummary.distance)}</p>
-                    <p className="text-xs text-[#A3A3A3]">{formatDuration(destinationSummary.duration)}</p>
-                  </div>
-                </div>
-
-                {/* Next Turn Display */}
-                {activeStep && (
-                  <div className="rounded-lg border border-[#38BDF8]/40 bg-[#0EA5E9]/10 px-4 py-3">
-                    <p className="text-xs uppercase tracking-wide text-[#38BDF8]">Next turn</p>
-                    <p className="text-sm font-semibold text-[#FAFAFA] mt-1">{activeStep.instruction}</p>
-                    <p className="text-xs text-[#A3A3A3] mt-1">
-                      {formatDistance(activeStep.distance)} · {formatDuration(activeStep.duration)}
-                    </p>
-                    {activeStep.name && (
-                      <p className="text-xs text-[#A3A3A3] mt-1">{activeStep.name}</p>
-                    )}
-                  </div>
-                )}
-
-                {/* Turn-by-Turn List */}
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-[#A3A3A3] mb-2">Turn-by-turn</p>
-                  <ol className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                    {navigationState?.steps.map((step: NavigationStep, index) => {
-                      const isActive = step.id === activeStep?.id
-                      return (
-                        <li
-                          key={step.id}
-                          className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
-                            isActive
-                              ? 'border-[#38BDF8] bg-[#1E293B]/80 text-[#FAFAFA]'
-                              : 'border-[#262626] bg-[#0C0C0C] text-[#D4D4D4]'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <span className="font-semibold text-xs text-[#A3A3A3] w-6">{index + 1}</span>
-                            <div className="flex-1">
-                              <p className="text-xs text-[#FAFAFA] font-medium">{step.instruction}</p>
-                              {step.name && <p className="text-[10px] text-[#A3A3A3] mt-1">{step.name}</p>}
-                            </div>
-                            <span className="text-[10px] text-[#A3A3A3] whitespace-nowrap">
-                              {formatDistance(step.distance)} · {formatDuration(step.duration)}
-                            </span>
-                          </div>
-                        </li>
-                      )
-                    })}
-                  </ol>
-                </div>
-              </div>
-            )}
-          </section>
-
+      <main className="flex-1 overflow-hidden">
+        <div className="h-full relative">
           {/* Map Component - Full screen */}
           <div className="fixed inset-0 z-0">
             <MapView
@@ -877,7 +743,7 @@ export default function MapPage() {
 
       {/* Party Members Overlay - Compact (only shown in party mode) */}
       {userPartyId && partyMembers.length > 0 && (
-        <div className="fixed top-14 left-2 bg-[#0C0C0C]/90 border border-[#262626] rounded-lg p-2 backdrop-blur-sm max-w-40 z-50">
+        <div className={`fixed left-2 bg-[#0C0C0C]/90 border border-[#262626] rounded-lg p-2 backdrop-blur-sm max-w-40 z-50 transition-all ${navigationActive && activeStep ? 'top-20' : 'top-14'}`}>
           <h3 className="text-[#84CC16] font-semibold text-xs mb-1.5">Party ({partyMembers.length})</h3>
           <div className="space-y-1 max-h-32 overflow-y-auto">
             {partyMembers.map((member) => (
