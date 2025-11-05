@@ -651,47 +651,54 @@ export default function MapPage() {
       
       // Simulate movement along route
       const coordinates = route.routeGeoJSON.features[0].geometry.coordinates as [number, number][]
-      let index = 0
+      
+      // Interpolation state for smooth movement
+      let currentIndex = 0
+      let interpolationProgress = 0
+      const POINTS_PER_SECOND = 20 // How many coordinate points to traverse per second (realistic speed)
       
       const interval = setInterval(() => {
-        if (index >= coordinates.length - 1) {
+        if (currentIndex >= coordinates.length - 1) {
           clearInterval(interval)
           setIsSimulating(false)
           return
         }
         
-        const [lng, lat] = coordinates[index]
-        const [nextLng, nextLat] = coordinates[index + 1]
+        // Interpolate between current and next point
+        const [lng1, lat1] = coordinates[currentIndex]
+        const [lng2, lat2] = coordinates[currentIndex + 1]
         
-        // Calculate heading (bearing between two points)
-        const dLng = nextLng - lng
-        const dLat = nextLat - lat
+        // Smooth interpolation
+        const lng = lng1 + (lng2 - lng1) * interpolationProgress
+        const lat = lat1 + (lat2 - lat1) * interpolationProgress
+        
+        // Calculate heading
+        const dLng = lng2 - lng1
+        const dLat = lat2 - lat1
         const heading = (Math.atan2(dLng, dLat) * 180 / Math.PI + 360) % 360
         
-        // Calculate speed based on road type (simulate highway speeds)
-        // Check if we're on highway (faster movement through coordinates = highway)
+        // Calculate speed based on distance between points
         const distance = Math.sqrt(dLng * dLng + dLat * dLat)
-        let speed = 50 // default city speed
+        let speed = 50 // km/h
         
         if (distance > 0.001) {
-          speed = 120 // highway speed
+          speed = 100 // highway
         } else if (distance > 0.0005) {
-          speed = 80 // main road
+          speed = 70 // main road
         }
         
         setCurrentLocation([lng, lat])
         setCurrentHeading(heading)
         setCurrentSpeed(speed)
         
-        // Jump more points on highway for faster simulation
-        if (speed === 120) {
-          index += 3
-        } else if (speed === 80) {
-          index += 2
-        } else {
-          index += 1
+        // Increment interpolation progress
+        interpolationProgress += 0.001 * POINTS_PER_SECOND // Progress increment per millisecond
+        
+        if (interpolationProgress >= 1.0) {
+          interpolationProgress = 0
+          currentIndex++
         }
-      }, 1000) // Update every second
+      }, 1) // Update every 1ms for ultra-smooth GPS simulation
       
     } catch (err) {
       console.error('Simulation error:', err)

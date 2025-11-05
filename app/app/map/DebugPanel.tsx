@@ -70,9 +70,9 @@ export default function DebugPanel({ onStartSimulation, onStopSimulation, isSimu
 
         <div className="mt-3 pt-3 border-t border-[#262626]">
           <div className="text-[10px] text-[#A3A3A3] space-y-1">
-            <div>• Speed: 0-120 km/h (highway)</div>
-            <div>• Updates GPS every 1s</div>
-            <div>• Realistic heading/rotation</div>
+            <div>• Speed: 50-100 km/h (realistic)</div>
+            <div>• Updates GPS every 1ms</div>
+            <div>• Ultra-smooth like real GPS</div>
           </div>
         </div>
       </div>
