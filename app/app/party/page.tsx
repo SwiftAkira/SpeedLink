@@ -44,6 +44,64 @@ export default function PartyPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Real-time subscription for party member changes
+  useEffect(() => {
+    if (!currentParty?.id) return;
+
+    const supabase = createClient();
+
+    // Subscribe to changes in party_members table for this party
+    const channel = supabase
+      .channel(`party-${currentParty.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT', // Someone joined
+          schema: 'public',
+          table: 'party_members',
+          filter: `party_id=eq.${currentParty.id}`,
+        },
+        (payload) => {
+          console.log('🎉 New member joined:', payload);
+          loadCurrentParty();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE', // Someone left
+          schema: 'public',
+          table: 'party_members',
+          filter: `party_id=eq.${currentParty.id}`,
+        },
+        (payload) => {
+          console.log('👋 Member left:', payload);
+          loadCurrentParty();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE', // Member status updated
+          schema: 'public',
+          table: 'party_members',
+          filter: `party_id=eq.${currentParty.id}`,
+        },
+        (payload) => {
+          console.log('🔄 Member updated:', payload);
+          loadCurrentParty();
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentParty?.id]);
+
   const handleCreateSuccess = () => {
     setShowCreateModal(false);
     loadCurrentParty();
